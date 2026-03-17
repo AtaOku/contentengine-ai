@@ -1095,20 +1095,15 @@ def render_image_with_fallback(url, caption="", width=None):
 
 
 def show_image_with_download(img_url, caption, key_suffix, filename="generated_image.png"):
-    """Show AI image + download button side by side."""
-    st.image(img_url, caption=caption, use_container_width=True)
-    try:
-        resp = requests.get(img_url, timeout=15)
-        if resp.status_code == 200:
-            st.download_button(
-                "⬇️ Download image",
-                resp.content,
-                file_name=filename,
-                mime="image/png",
-                key=f"dl_img_{key_suffix}"
-            )
-    except Exception:
-        st.markdown(f"[⬇️ Download image]({img_url})")
+    """Show AI image with download link. Client-side rendering — no server fetch needed."""
+    st.markdown(f"""
+<div style="border-radius:10px; overflow:hidden; margin:0.5rem 0; border:1px solid #e5e7eb;">
+    <img src="{img_url}" style="width:100%; display:block;" alt="{caption}" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:2rem; text-align:center; color:#94a3b8;\\'>🖼️ Image loading... <a href=\\'{img_url}\\' target=\\'_blank\\'>Open directly</a></div>';">
+    <div style="padding:8px 12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
+        <span style="color:#64748b;">{caption}</span>
+        <a href="{img_url}" download="{filename}" target="_blank" style="color:#6366f1; text-decoration:none; font-weight:600;">⬇️ Download</a>
+    </div>
+</div>""", unsafe_allow_html=True)
 
 
 def build_markdown_bundle(results, insight_text="", channel_labels=None):
@@ -2665,7 +2660,12 @@ with tab_showcase:
 
         renderer = MOCKUP_RENDERERS.get(key)
         if renderer:
-            st.markdown(renderer(demo_data[key]), unsafe_allow_html=True)
+            try:
+                mockup_html = renderer(demo_data[key])
+                if mockup_html:
+                    st.markdown(mockup_html, unsafe_allow_html=True)
+            except Exception as e:
+                st.text_area(f"sc_raw_{key}", value=demo_data[key], height=250, key=f"sc_fallback_{key}_{hash(selected_demo) % 10000}", label_visibility="collapsed")
 
         # SEO panel for blog showcase
         if key == "blog":
