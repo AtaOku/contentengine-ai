@@ -13,6 +13,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import io
 
 # ── Page Config ──────────────────────────────────────────────
 st.set_page_config(
@@ -282,14 +283,97 @@ def fetch_url_content(url):
     except Exception as e:
         return None, f"Error extracting content: {str(e)[:100]}"
 
+
+def extract_file_content(uploaded_file):
+    """Extract text from uploaded files (PDF, TXT, DOCX, CSV, MD)."""
+    name = uploaded_file.name.lower()
+    try:
+        if name.endswith(".txt") or name.endswith(".md"):
+            return uploaded_file.read().decode("utf-8", errors="ignore"), None
+
+        elif name.endswith(".csv"):
+            content = uploaded_file.read().decode("utf-8", errors="ignore")
+            # Truncate large CSVs
+            lines = content.split("\n")
+            if len(lines) > 100:
+                content = "\n".join(lines[:100]) + f"\n\n[...truncated, {len(lines)} total rows]"
+            return content, None
+
+        elif name.endswith(".pdf"):
+            try:
+                import PyPDF2
+                reader = PyPDF2.PdfReader(io.BytesIO(uploaded_file.read()))
+                pages = []
+                for i, page in enumerate(reader.pages):
+                    text = page.extract_text()
+                    if text:
+                        pages.append(f"[Page {i+1}]\n{text}")
+                full_text = "\n\n".join(pages)
+                if len(full_text) > 4000:
+                    full_text = full_text[:4000] + "\n\n[...truncated]"
+                if not full_text.strip():
+                    return None, "PDF appears to be image-based (no extractable text)."
+                return full_text, None
+            except ImportError:
+                return None, "PyPDF2 not available. Install with: pip install PyPDF2"
+
+        elif name.endswith(".docx"):
+            try:
+                import docx
+                doc = docx.Document(io.BytesIO(uploaded_file.read()))
+                paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+                full_text = "\n\n".join(paragraphs)
+                if len(full_text) > 4000:
+                    full_text = full_text[:4000] + "\n\n[...truncated]"
+                return full_text, None
+            except ImportError:
+                return None, "python-docx not available. Install with: pip install python-docx"
+
+        else:
+            return None, f"Unsupported file type: {name.split('.')[-1]}"
+
+    except Exception as e:
+        return None, f"Error reading file: {str(e)[:100]}"
+
+
+# ── Tone & Audience Configs ──────────────────────────────────
+
+TONE_OPTIONS = {
+    "🎯 Thought Leadership": "Authoritative, insight-driven. You're the expert sharing what you've learned. No selling.",
+    "⚡ Provocative / Contrarian": "Challenge conventional wisdom. Be bold. Make people disagree in the comments.",
+    "📊 Data-Driven / Analytical": "Lead with numbers, benchmarks, and evidence. Minimal opinion, maximum proof.",
+    "🤝 Conversational / Peer": "Talk like a colleague over coffee. Casual but smart. First person.",
+    "📚 Educational / How-To": "Teach something specific. Step-by-step. Practical and actionable.",
+}
+
+AUDIENCE_OPTIONS = {
+    "👔 C-Suite / VP": "Time-constrained executives. Lead with business impact, ROI, risk. Skip technical details.",
+    "🔧 Ops / Engineering": "Hands-on practitioners. They want specifics, not buzzwords. Technical credibility matters.",
+    "📈 Marketing / Growth": "Growth-oriented marketers. Speak their language: CAC, LTV, conversion, attribution.",
+    "🏭 Industry / Domain Expert": "Deep domain knowledge. Don't explain basics. Peer-to-peer expert conversation.",
+    "🌍 General / Mixed": "Broad audience. Balance accessibility with depth. Define jargon when used.",
+}
+
+
 def get_client():
     api_key = st.session_state.get("api_key", "")
     if not api_key:
         return None
     return anthropic.Anthropic(api_key=api_key)
 
-def generate_content(client, format_type, insight, context):
+def generate_content(client, format_type, insight, context, tone_desc="", audience_desc=""):
     prompt = FORMAT_PROMPTS[format_type].format(insight=insight, context=context)
+
+    # Inject tone and audience into prompt
+    modifiers = ""
+    if tone_desc:
+        modifiers += f"\n\nTONE INSTRUCTION: {tone_desc}"
+    if audience_desc:
+        modifiers += f"\nAUDIENCE: {audience_desc}"
+
+    if modifiers:
+        prompt = prompt + modifiers
+
     try:
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
@@ -590,7 +674,7 @@ st.markdown("""
     <div class="hero-subtitle">
         Raw insight in. Publish-ready content out. Four channels. Under 60 seconds.
     </div>
-    <div class="hero-badge">PIPELINE v1.0 — Built for Manufacturing Content @ Scale</div>
+    <div class="hero-badge">PIPELINE v1.1 — Text · URL · PDF · DOCX · Tone & Audience Controls</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -608,11 +692,11 @@ with tab_pipeline:
 
     input_mode = st.radio(
         "Input method:",
-        ["✍️ Write / Paste text", "🔗 Import from URL", "📦 Demo insight"],
+        ["✍️ Write / Paste", "🔗 URL", "📄 Upload File", "📦 Demo"],
         horizontal=True,
     )
 
-    if input_mode == "📦 Demo insight":
+    if input_mode == "📦 Demo":
         demo_choice = st.selectbox(
             "Select a demo insight:",
             list(DEMO_INSIGHTS.keys()),
@@ -621,10 +705,10 @@ with tab_pipeline:
         insight_text = st.text_area("Raw insight", value=demo["insight"].strip(), height=140)
         context = demo["context"].strip()
 
-    elif input_mode == "🔗 Import from URL":
+    elif input_mode == "🔗 URL":
         url_input = st.text_input(
             "Article / post URL",
-            placeholder="https://techcrunch.com/2026/... or any article URL",
+            placeholder="https://techcrunch.com/2026/... — any article, blog post, or news page",
         )
         if url_input:
             with st.spinner("🔗 Fetching article content..."):
@@ -642,12 +726,61 @@ with tab_pipeline:
         else:
             insight_text = ""
 
-    else:  # Write / Paste text
+    elif input_mode == "📄 Upload File":
+        uploaded = st.file_uploader(
+            "Upload a document",
+            type=["pdf", "txt", "md", "csv", "docx"],
+            help="Supports PDF, TXT, Markdown, CSV, DOCX. Content is extracted and used as the raw insight."
+        )
+        if uploaded:
+            with st.spinner(f"📄 Extracting content from {uploaded.name}..."):
+                file_text, error = extract_file_content(uploaded)
+            if error:
+                st.error(error)
+                insight_text = ""
+            else:
+                st.success(f"Extracted {len(file_text.split())} words from {uploaded.name}")
+                insight_text = st.text_area(
+                    "Extracted content (edit if needed):",
+                    value=file_text,
+                    height=200,
+                )
+        else:
+            insight_text = ""
+
+    else:  # Write / Paste
         insight_text = st.text_area(
             "Raw insight",
-            placeholder="Paste a news headline, competitor move, customer quote, Reddit thread, or any raw signal...",
+            placeholder="Paste a news headline, competitor move, customer quote, Reddit thread, press release, or any raw signal...",
             height=140,
         )
+
+    # ── Tone & Audience Controls ──────────────────────────────
+    st.markdown("---")
+    st.markdown("### 🎨 Content Controls")
+    col_tone, col_audience = st.columns(2)
+
+    with col_tone:
+        selected_tone = st.selectbox(
+            "Tone",
+            list(TONE_OPTIONS.keys()),
+            index=0,
+            help="Controls the voice and style of all generated content."
+        )
+        tone_desc = TONE_OPTIONS[selected_tone]
+
+    with col_audience:
+        selected_audience = st.selectbox(
+            "Target Audience",
+            list(AUDIENCE_OPTIONS.keys()),
+            index=4,  # Default: General / Mixed
+            help="Adjusts complexity, jargon, and framing for the target reader."
+        )
+        audience_desc = AUDIENCE_OPTIONS[selected_audience]
+
+    st.caption(f"**Tone:** {tone_desc}  \n**Audience:** {audience_desc}")
+
+    st.markdown("---")
 
     channels = []
     if gen_linkedin: channels.append("linkedin")
@@ -709,7 +842,7 @@ with tab_pipeline:
                 progress = st.progress(0)
                 for i, ch in enumerate(channels):
                     with st.spinner(f"Generating {channel_labels[ch]}..."):
-                        results[ch] = generate_content(client, ch, insight_text, context)
+                        results[ch] = generate_content(client, ch, insight_text, context, tone_desc, audience_desc)
                     progress.progress((i + 1) / len(channels))
 
                 elapsed = time.time() - start_time
@@ -825,19 +958,24 @@ with tab_architecture:
 
     st.markdown("#### Pipeline Flow")
     st.code("""
-    ┌─────────────┐     ┌──────────────┐     ┌─────────────────────┐
-    │  RAW INSIGHT │────→│   ANALYSIS   │────→│  PARALLEL GENERATE  │
-    │  (any text)  │     │  (AI layer)  │     │                     │
-    └─────────────┘     └──────────────┘     │  ├─ LinkedIn Post    │
-                              │               │  ├─ Blog Draft       │
-                         Extracts:            │  ├─ Reddit Thread    │
-                         · Core angle         │  └─ Email Sequence   │
-                         · Pain point         └─────────────────────┘
-                         · Contrarian take              │
-                         · Content hooks          ┌─────┴─────┐
-                         · Channel ranking        │  4 OUTPUTS │
-                                                  │  < 60 sec  │
-                                                  └───────────┘
+    ┌─────────────────┐
+    │     INPUTS       │
+    │                  │
+    │  ✍️ Text/Paste    │     ┌──────────────┐     ┌─────────────────────┐
+    │  🔗 URL Import   │────→│   ANALYSIS   │────→│  PARALLEL GENERATE  │
+    │  📄 PDF Upload   │     │  (AI layer)  │     │  + Tone & Audience  │
+    │  📎 DOCX/CSV     │     └──────────────┘     │                     │
+    │  📦 Demo         │           │               │  ├─ LinkedIn Post    │
+    └─────────────────┘      Extracts:            │  ├─ Blog Draft       │
+                              · Core angle         │  ├─ Reddit Thread    │
+              ┌───────┐       · Pain point         │  └─ Email Sequence   │
+              │ TONE  │       · Contrarian take     └─────────────────────┘
+              │ CTRL  │       · Content hooks                │
+              └───┬───┘       · Channel ranking        ┌─────┴─────┐
+              ┌───┴────┐                               │  4 OUTPUTS │
+              │AUDIENCE │                              │  < 60 sec  │
+              │  CTRL   │                              └───────────┘
+              └────────┘
     """, language=None)
 
     st.markdown("---")
