@@ -124,6 +124,113 @@ st.markdown("""
         margin-bottom: 0.75rem;
     }
 
+    /* Platform Mockups */
+    .linkedin-mockup {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 1rem 0;
+        font-family: -apple-system, system-ui, sans-serif;
+    }
+    .linkedin-header {
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .linkedin-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0a66c2, #004182);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 18px;
+    }
+    .linkedin-meta { font-size: 0.85rem; }
+    .linkedin-name { font-weight: 600; color: #000; }
+    .linkedin-title { color: #666; font-size: 0.75rem; }
+    .linkedin-body { padding: 0 16px 16px; font-size: 0.9rem; line-height: 1.6; color: #333; white-space: pre-wrap; }
+    .linkedin-actions {
+        padding: 8px 16px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-around;
+        color: #666;
+        font-size: 0.8rem;
+    }
+
+    .reddit-mockup {
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 1rem 0;
+        font-family: -apple-system, system-ui, sans-serif;
+    }
+    .reddit-sidebar {
+        background: #f8f9fa;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        float: left;
+        min-width: 40px;
+    }
+    .reddit-vote { color: #878a8c; font-size: 0.75rem; font-weight: 700; }
+    .reddit-vote-count { color: #1a1a1b; font-weight: 700; }
+    .reddit-content { padding: 8px 12px; }
+    .reddit-sub { font-size: 0.75rem; color: #787c7e; margin-bottom: 4px; }
+    .reddit-sub strong { color: #1c1c1c; }
+    .reddit-title-text { font-size: 1.1rem; font-weight: 600; color: #1a1a1b; margin-bottom: 8px; }
+    .reddit-body { font-size: 0.9rem; line-height: 1.5; color: #1a1a1b; white-space: pre-wrap; }
+    .reddit-footer { padding: 4px 12px 8px; font-size: 0.75rem; color: #878a8c; display: flex; gap: 12px; }
+
+    .email-mockup {
+        background: #fff;
+        border: 1px solid #dadce0;
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 1rem 0;
+        font-family: -apple-system, system-ui, sans-serif;
+        max-width: 600px;
+    }
+    .email-toolbar {
+        background: #f2f2f2;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: #5f6368;
+        border-bottom: 1px solid #dadce0;
+    }
+    .email-subject { padding: 12px 16px; font-size: 1rem; font-weight: 600; color: #202124; border-bottom: 1px solid #f0f0f0; }
+    .email-meta { padding: 8px 16px; font-size: 0.8rem; color: #5f6368; }
+    .email-body-content { padding: 16px; font-size: 0.9rem; line-height: 1.7; color: #202124; white-space: pre-wrap; }
+
+    .blog-mockup {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 1rem 0;
+        font-family: 'Georgia', serif;
+    }
+    .blog-header-bar {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        padding: 24px;
+    }
+    .blog-category { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: #818cf8; margin-bottom: 8px; }
+    .blog-headline { font-size: 1.4rem; font-weight: 700; color: #fff; line-height: 1.3; }
+    .blog-byline { font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 12px; }
+    .blog-body-content { padding: 24px; font-size: 0.95rem; line-height: 1.8; color: #374151; white-space: pre-wrap; }
+
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -484,6 +591,95 @@ def score_content(client, content, channel):
     except:
         return None
 
+
+def render_linkedin_mockup(content):
+    safe = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return f"""
+<div class="linkedin-mockup">
+    <div class="linkedin-header">
+        <div class="linkedin-avatar">CE</div>
+        <div class="linkedin-meta">
+            <div class="linkedin-name">ContentEngine AI</div>
+            <div class="linkedin-title">Generated via Pipeline · Just now · 🌐</div>
+        </div>
+    </div>
+    <div class="linkedin-body">{safe}</div>
+    <div class="linkedin-actions">
+        <span>👍 Like</span><span>💬 Comment</span><span>🔄 Repost</span><span>📤 Send</span>
+    </div>
+</div>"""
+
+
+def render_reddit_mockup(content):
+    lines = content.strip().split("\n")
+    title = lines[0] if lines else "Untitled"
+    body = "\n".join(lines[2:]) if len(lines) > 2 else ""
+    safe_t = title.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+    safe_b = body.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+    return f"""
+<div class="reddit-mockup">
+    <div style="display:flex;">
+        <div class="reddit-sidebar">
+            <span class="reddit-vote">▲</span>
+            <span class="reddit-vote-count">247</span>
+            <span class="reddit-vote">▼</span>
+        </div>
+        <div class="reddit-content">
+            <div class="reddit-sub"><strong>r/marketing</strong> · Posted by u/contentengine · 2h</div>
+            <div class="reddit-title-text">{safe_t}</div>
+            <div class="reddit-body">{safe_b}</div>
+        </div>
+    </div>
+    <div class="reddit-footer">
+        <span>💬 42 Comments</span><span>📤 Share</span><span>⭐ Save</span>
+    </div>
+</div>"""
+
+
+def render_email_mockup(content):
+    safe = content.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+    subject = "Your weekly insight"
+    for line in content.split("\n"):
+        if line.startswith("Subject A:"):
+            subject = line.replace("Subject A:","").strip()
+            break
+    safe_s = subject.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+    return f"""
+<div class="email-mockup">
+    <div class="email-toolbar">
+        <span>📥 Inbox</span> → <span style="color:#202124;font-weight:600;">ContentEngine</span>
+    </div>
+    <div class="email-subject">{safe_s}</div>
+    <div class="email-meta">From: content@company.com · To: [First Name] · Now</div>
+    <div class="email-body-content">{safe}</div>
+</div>"""
+
+
+def render_blog_mockup(content):
+    lines = content.strip().split("\n")
+    headline = lines[0].lstrip("# ") if lines else "Untitled"
+    body = "\n".join(lines[1:])
+    safe_h = headline.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+    safe_b = body.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+    return f"""
+<div class="blog-mockup">
+    <div class="blog-header-bar">
+        <div class="blog-category">Insights</div>
+        <div class="blog-headline">{safe_h}</div>
+        <div class="blog-byline">ContentEngine AI · 5 min read</div>
+    </div>
+    <div class="blog-body-content">{safe_b}</div>
+</div>"""
+
+
+MOCKUP_RENDERERS = {
+    "linkedin": render_linkedin_mockup,
+    "blog": render_blog_mockup,
+    "reddit": render_reddit_mockup,
+    "email": render_email_mockup,
+}
+
+
 def analyze_insight(client, insight, context):
     prompt = ANALYSIS_PROMPT.format(insight=insight, context=context)
     try:
@@ -625,103 +821,103 @@ CTA: See how leading manufacturers are solving the skills gap → [link]"""
 # ── Pre-generated GENERIC content (SaaS product launch) ─────
 
 PREGENERATED_GENERIC = {
-    "insight_used": "Apple Vision Pro sales have reportedly slowed to under 100K units per quarter. Meanwhile, Meta is shipping Quest 3 at $499 and enterprise AR adoption is quietly accelerating. The consumer VR/AR dream might be stalling, but the B2B use case — remote assistance, training, digital twins — is growing 40% YoY.",
+    "insight_used": "A recent analysis shows that employee-generated content on LinkedIn gets 8x more engagement than brand page posts. Meanwhile, companies are spending $50-100K/month on content agencies producing generic thought leadership that nobody reads. The most authentic, high-performing content is coming from people who actually do the work — engineers, PMs, customer success — not the marketing department.",
 
-    "linkedin": """Everyone's writing obituaries for spatial computing because Vision Pro isn't selling.
+    "linkedin": """Your marketing team is not your best marketing channel.
 
-They're looking at the wrong market.
+Your engineers are.
 
-Consumer AR/VR? Sure, it's struggling. Vision Pro reportedly moved fewer than 100K units last quarter. The $3,500 price tag was never going to create a mass market.
+Here's a stat that should make every CMO uncomfortable: employee posts on LinkedIn get 8x more engagement than brand page content. Eight times.
 
-But here's what nobody's covering:
+Why? Because people trust people. Not logos.
 
-Enterprise AR adoption is growing 40% year-over-year. Quietly. Without the hype cycle.
+I watched a SaaS company spend $80K/month on a content agency. Polished blog posts. Perfectly branded carousels. Professional photography.
 
-A Fortune 500 manufacturer told me their remote assistance tool paid for itself in 3 months. One fewer expert flight per week = $150K/year savings. Per site.
+Engagement? Crickets.
 
-A surgical training platform reduced procedure errors by 30% in their first clinical trial.
+Then their VP of Engineering started posting raw, unpolished takes about debugging production issues at 2 AM. No graphics. No hashtags. Just honest stories from the trenches.
 
-A logistics company cut warehouse onboarding from 2 weeks to 3 days using AR-guided picking.
+That one person generated more pipeline than the entire content budget.
 
-The pattern: spatial computing works when it solves a specific, expensive problem for someone who doesn't care about "the metaverse."
+The uncomfortable truth: your best content creators aren't in marketing. They're in customer success, hearing the real objections. They're in product, making the hard tradeoff decisions. They're in engineering, solving problems that your customers actually care about.
 
-Consumer tech analysts keep asking "will people watch movies in VR?"
+The companies winning at content in 2026 aren't hiring more writers. They're giving their subject matter experts a microphone and getting out of the way.
 
-The better question: "How much does it cost when your field technician can't fix the problem remotely?"
+The CMO's job isn't to create content anymore. It's to build systems that help 50 employees create content.
 
-The enterprise AR market doesn't need a viral moment. It needs ROI spreadsheets. And those are looking very good.
+Does your company encourage non-marketing employees to post? What's worked?
 
-Where are you seeing enterprise AR/VR actually deliver value?
+#ContentMarketing #B2BMarketing #EmployeeAdvocacy #LinkedInStrategy #ContentStrategy""",
 
-#SpatialComputing #EnterpriseAR #B2BTech #DigitalTransformation #Innovation""",
+    "blog": """# Your Best Content Creators Don't Work in Marketing
 
-    "blog": """# Everyone's Wrong About Spatial Computing — The Real Market Isn't Consumers
+**The $80K/month content strategy that got outperformed by one engineer on LinkedIn.**
 
-**The headlines say VR is dead. The spreadsheets say otherwise.**
+Here's something most marketing leaders know but won't say out loud: the content their team produces is not what's actually driving pipeline. The polished blog posts, the branded carousels, the professionally edited videos — they check boxes, but they don't move needles.
 
-Apple Vision Pro reportedly shipped fewer than 100,000 units last quarter. Tech Twitter declared spatial computing over. Investors who poured billions into "the metaverse" are quietly writing it off.
+What does? Unfiltered, authentic content from people who actually do the work.
 
-But if you're only watching the consumer market, you're missing the story entirely.
+## The 8x Engagement Gap
 
-## The Enterprise Market Nobody's Covering
+Employee-generated content on LinkedIn receives 8x more engagement than corporate brand posts. This isn't a marginal difference — it's an order of magnitude. And it makes intuitive sense: people scroll past logos, but they stop for humans.
 
-While consumer VR stalls, enterprise AR adoption is growing 40% year-over-year. The use cases aren't glamorous — they don't make for exciting keynotes — but they're solving real problems with measurable ROI.
+A mid-stage SaaS company I spoke with learned this the expensive way. They were spending $80,000 per month on a premium content agency. Beautiful output. On-brand everything. Engagement rates? Below industry average.
 
-A Fortune 500 manufacturer implemented remote assistance and eliminated one expert travel trip per week. At $3,000 per trip, that's $150K per site per year. The hardware paid for itself in a single quarter.
+Then something unplanned happened. Their VP of Engineering started posting about the real challenges of building their product. Debugging stories. Architecture decisions. The messy, honest reality of shipping software. No design team. No approval process. Just authentic expertise.
 
-A medical training platform reduced procedural errors by 30% in clinical trials. A logistics company cut warehouse onboarding time from two weeks to three days using AR-guided picking workflows.
+Within three months, that single person's LinkedIn presence was generating more inbound leads than the entire content budget.
 
-## Why Enterprise Wins Where Consumer Fails
+## Why This Happens
 
-The consumer VR pitch requires convincing millions of people to change their daily habits for marginal entertainment upgrades. That's an incredibly hard sell at any price point, let alone $3,500.
+Brand content fails because it's optimized for brand consistency, not for human connection. It goes through six rounds of approval until every edge is sanded off. The result is content that offends nobody and interests nobody.
 
-The enterprise pitch is fundamentally different: here's a tool that saves you money, reduces errors, and solves a problem you're already spending six figures on. The ROI calculation does the selling.
+Employee content works because it comes from a place of genuine expertise and authentic experience. A customer success manager describing a difficult onboarding call is more compelling than a case study that took three months to approve. An engineer explaining why they chose one database over another teaches more than a whitepaper ever could.
 
-Enterprise buyers don't need spatial computing to be "cool." They need it to be cheaper than flying a technician to a remote site. They need it to train new employees faster than classroom sessions. They need it to reduce costly errors in high-stakes procedures.
+## The New Content Playbook
 
-## What This Means for the Market
+The companies winning at content in 2026 aren't scaling their content teams. They're building internal systems that make it easy for subject matter experts across the company to share what they know.
 
-The spatial computing industry is going through the same phase that cloud computing did in 2008. Consumer cloud apps were struggling to monetize. Meanwhile, AWS was quietly building a $100B business serving enterprises.
+This means providing simple frameworks and templates, offering lightweight coaching on storytelling, removing approval bottlenecks for personal posts, and celebrating employees who share publicly.
 
-The companies that will win in spatial computing aren't building the flashiest headsets. They're building the most boring, reliable, ROI-positive enterprise tools.
+The CMO's job is evolving from "create great content" to "build systems that enable 50 people to create great content."
 
-**The takeaway:** Stop watching Vision Pro sales numbers. Start watching enterprise AR deployment rates. That's where the real market is being built — one unglamorous ROI spreadsheet at a time.""",
+**The takeaway:** If your content strategy relies entirely on your marketing team, you're leaving your most powerful channel untapped. The people closest to your customers and your product are your best storytellers. Give them the tools and get out of the way.""",
 
-    "reddit": """Is enterprise AR/VR quietly succeeding while consumer VR gets all the "it's dead" headlines?
+    "reddit": """Anyone else noticed that the most viral B2B content almost never comes from marketing teams?
 
-I keep seeing articles about how Vision Pro is flopping and VR is over. But in my world (B2B tech), AR adoption is actually accelerating.
+I've been tracking this pattern for about a year now. The LinkedIn posts that actually blow up in B2B aren't the polished brand posts — they're raw takes from engineers, PMs, and customer-facing people who just... share what they're dealing with.
 
-Few examples I've come across recently:
+One example: a company I know spends $80K/month on content. Perfectly branded, agency-produced. Gets maybe 50 likes per post on their company page.
 
-- A manufacturing client implemented remote assistance for field technicians. Saved $150K/year per site by cutting expert travel. Hardware ROI in one quarter.
-- Talked to a logistics ops manager who cut warehouse onboarding from 2 weeks to 3 days with AR-guided workflows.
-- Medical training platform reporting 30% fewer procedural errors in clinical trials.
+Their VP of Eng starts posting about production debugging at 2 AM. Zero graphics, no hashtag strategy, just honest stories. Gets 10x the engagement. Started generating actual inbound leads.
 
-None of this is "metaverse" stuff. It's boring, practical, ROI-driven tooling. The use case isn't "explore virtual worlds" — it's "how do I fix this machine without flying someone 2,000 miles."
+The stat that blew my mind: employee posts on LinkedIn get 8x more engagement than brand page posts. Eight times.
 
-Feels like the whole industry is being judged by consumer adoption numbers when the enterprise side is telling a completely different story.
+Makes sense when you think about it. People trust people, not logos. A CSM describing a tough client call is 100x more relatable than a polished case study.
 
-Anyone else seeing this disconnect? Curious what AR/VR deployments look like in your industry.
+Curious if others are seeing this. Are any of your companies actively encouraging non-marketing people to post? How do you handle the "what if they say something off-brand" concern?
 
-TL;DR: Consumer VR struggling but enterprise AR/VR growing 40% YoY. Boring use cases (remote assistance, training, onboarding) with strong ROI. Industry might be looking at the wrong metrics.""",
+TL;DR: Employee-generated content massively outperforms brand content. The best content creators in your company probably aren't in marketing. Companies should be building systems to help employees share, not hiring more writers.""",
 
-    "email": """Subject A: Spatial computing isn't dead — you're watching the wrong market
-Subject B: The AR market growing 40% that nobody covers
-Preview: Enterprise AR is quietly winning while consumer VR stumbles.
+    "email": """Subject A: Your marketing team isn't your best marketing channel
+Subject B: The $80K/month content strategy that got beaten by one engineer
+Preview: Employee posts get 8x more engagement. Here's why.
 
 Hi [First Name],
 
-Quick take: every "VR is dead" headline is looking at consumer sales. The enterprise market tells a very different story.
+Quick question: who creates the content that actually drives pipeline at your company?
 
-While Vision Pro shipments slow, enterprise AR adoption is growing 40% year-over-year. The use cases aren't flashy — remote assistance, guided training, digital twins — but the ROI is undeniable.
+If you said "the marketing team," you might be surprised.
 
-One manufacturing deployment: remote expert assistance eliminated one field visit per week. $150K annual savings per site. Hardware paid for itself in 90 days.
+Employee-generated content on LinkedIn gets 8x more engagement than brand page posts. One company I talked to spent $80K/month on agency content — then watched a single engineer's LinkedIn posts outperform the entire budget.
 
-The pattern is consistent: spatial computing works when it solves a specific, expensive operational problem. Not when it tries to replace your TV.
+The pattern is consistent: authentic content from subject matter experts outperforms polished brand content by a wide margin. People trust people, not logos.
 
-We put together a breakdown of the 5 enterprise AR use cases with the fastest payback periods.
+The companies winning at content aren't hiring more writers. They're building systems that help engineers, PMs, and customer success teams share what they know.
 
-CTA: See the enterprise AR ROI breakdown → [link]"""
+We put together a playbook for building an employee content program that actually works — including templates, approval workflows, and the metrics that matter.
+
+CTA: Get the employee content playbook → [link]"""
 }
 
 
@@ -1080,63 +1276,70 @@ with tab_pipeline:
 # ─── TAB 2: Generic Demo ──────────────────────────────────────
 with tab_generic:
     st.markdown("""
-    ### 📦 Generic Demo — Enterprise Tech Content
+    ### 📦 Demo — "Your Best Content Creators Don't Work in Marketing"
 
-    This demonstrates the pipeline on a **non-manufacturing insight** to show
-    it works across any B2B domain. No API key needed — content is pre-generated.
+    Employee LinkedIn posts get **8x more engagement** than brand pages.
+    A company spending $80K/month on agency content got outperformed by one engineer posting raw takes.
 
-    **Input insight:** Enterprise AR/VR is quietly growing 40% YoY while consumer
-    VR gets "it's dead" headlines. The real market is boring, ROI-driven tooling.
+    **One raw insight → four channel-native outputs.** No API key needed.
     """)
 
     st.markdown("---")
 
     generic_config = [
-        ("💼 LINKEDIN POST", "linkedin", 380),
-        ("📝 BLOG DRAFT", "blog", 500),
-        ("🟠 REDDIT THREAD", "reddit", 350),
-        ("📧 EMAIL SEQUENCE", "email", 280),
+        ("💼 LINKEDIN POST", "linkedin"),
+        ("📝 BLOG DRAFT", "blog"),
+        ("🟠 REDDIT THREAD", "reddit"),
+        ("📧 EMAIL SEQUENCE", "email"),
     ]
 
-    for label, key, height in generic_config:
-        st.markdown(f'<div class="content-card"><div class="card-label">{label}</div></div>', unsafe_allow_html=True)
-        st.text_area(f"generic_{key}", value=PREGENERATED_GENERIC[key], height=height, key=f"gen_{key}", label_visibility="collapsed")
-        st.download_button(f"📋 Copy {key}", PREGENERATED_GENERIC[key], file_name=f"generic_{key}.txt", key=f"dl_gen_{key}")
+    for label, key in generic_config:
+        st.markdown(f'<div class="card-label">{label}</div>', unsafe_allow_html=True)
+        # Render platform mockup
+        renderer = MOCKUP_RENDERERS.get(key)
+        if renderer:
+            st.markdown(renderer(PREGENERATED_GENERIC[key]), unsafe_allow_html=True)
+        # Collapsible raw text + copy
+        with st.expander("📋 View raw text / copy"):
+            st.text_area(f"generic_{key}", value=PREGENERATED_GENERIC[key], height=250, key=f"gen_{key}", label_visibility="collapsed")
+            st.download_button(f"Copy {key}", PREGENERATED_GENERIC[key], file_name=f"generic_{key}.txt", key=f"dl_gen_{key}")
         st.markdown("---")
 
-    st.info("💡 **Same pipeline, different domain.** Swap the system prompt and context injection to adapt for any industry — SaaS, fintech, healthcare, logistics.")
+    st.info("💡 **Same pipeline, any domain.** Swap the system prompt and context injection to adapt for SaaS, fintech, healthcare, manufacturing, or any industry.")
 
 
 # ─── TAB 3: Workerbase Industry Demo ─────────────────────────
 with tab_workerbase:
     st.markdown("""
-    ### 🏭 Industry Demo — Manufacturing / Workerbase
+    ### 🏭 Industry Demo — Manufacturing / Connected Worker
 
-    Pre-generated content for a **Connected Worker platform** entering the US market.
-    Shows the pipeline configured with manufacturing domain expertise.
+    Same pipeline, configured with **manufacturing domain expertise**.
+    Shows how context injection adapts every output for a specific industry.
 
     **Input insight:** US Manufacturing Reshoring Wave — $200B+ in new factory investments,
     but nobody's talking about where the skilled workers will come from.
-
-    *One raw insight → four channel-native outputs → under 60 seconds.*
     """)
 
     st.markdown("---")
 
-    channel_config = [
-        ("💼 LINKEDIN POST — Ready to Publish", "linkedin", 350),
-        ("📝 BLOG DRAFT — Ready for Editorial Review", "blog", 500),
-        ("🟠 REDDIT THREAD — Native Tone, Zero Promotion", "reddit", 350),
-        ("📧 EMAIL SEQUENCE — With A/B Subject Lines", "email", 280),
+    wb_config = [
+        ("💼 LINKEDIN POST", "linkedin"),
+        ("📝 BLOG DRAFT", "blog"),
+        ("🟠 REDDIT THREAD", "reddit"),
+        ("📧 EMAIL SEQUENCE", "email"),
     ]
 
-    for label, key, height in channel_config:
-        st.markdown(f'<div class="content-card"><div class="card-label">{label}</div></div>', unsafe_allow_html=True)
-        st.text_area(key, value=PREGENERATED[key], height=height, key=f"show_{key}", label_visibility="collapsed")
-        st.download_button(f"📋 Copy {key}", PREGENERATED[key], file_name=f"workerbase_{key}.txt", key=f"dl_show_{key}")
+    for label, key in wb_config:
+        st.markdown(f'<div class="card-label">{label}</div>', unsafe_allow_html=True)
+        renderer = MOCKUP_RENDERERS.get(key)
+        if renderer:
+            st.markdown(renderer(PREGENERATED[key]), unsafe_allow_html=True)
+        with st.expander("📋 View raw text / copy"):
+            st.text_area(key, value=PREGENERATED[key], height=250, key=f"show_{key}", label_visibility="collapsed")
+            st.download_button(f"Copy {key}", PREGENERATED[key], file_name=f"workerbase_{key}.txt", key=f"dl_show_{key}")
         st.markdown("---")
 
-    st.info("💡 **All four outputs came from the same raw insight.** The pipeline maintains narrative consistency while adapting tone, format, and CTA for each channel.")
+    st.info("💡 **All four outputs came from the same raw insight.** Compare the tone between this tab and the Generic Demo — same pipeline, different domain injection.")
 
 
 # ─── TAB 4: Architecture ─────────────────────────────────────
