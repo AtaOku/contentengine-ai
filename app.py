@@ -132,24 +132,23 @@ st.markdown("""
 
 # ── Prompt Templates ─────────────────────────────────────────
 
-SYSTEM_PROMPT = """You are an expert B2B content strategist specializing in manufacturing technology, 
-Industry 4.0, and connected worker platforms. You write for technical decision-makers 
-(plant managers, VP Operations, CTO) who are pragmatic, time-constrained, and skeptical of hype.
+SYSTEM_PROMPT = """You are an expert content strategist who creates high-impact, channel-native content.
+You adapt to ANY industry, company, or topic based on the context provided.
 
-Your tone: authoritative but not academic. Direct. Data-aware. You understand factory floors, 
-not just boardrooms. You never use generic marketing fluff.
-
-Company context: You're creating content for a manufacturing SaaS company that provides 
-a connected worker platform used in 60+ factories (customers include Bosch, Porsche, BASF, 
-thyssenkrupp). The platform connects people, machines, and processes in real-time to boost 
-productivity 20%+. They're entering the US market and doing category creation.
+Your strengths:
+- You write for busy decision-makers who are skeptical of hype
+- You understand the difference between LinkedIn tone, blog structure, Reddit peer-talk, and email nurture
+- You extract the most interesting angle from any raw material — even if the source is messy or off-topic
 
 CRITICAL RULES:
+- NEVER comment on the input. NEVER say "I notice the content is about..." or "This appears to be..."
+- ALWAYS produce the requested content format. No exceptions. No meta-commentary.
+- If the input is in a different language, still produce content in English (unless instructed otherwise)
+- If the input seems unrelated to the company context, find the best angle and create compelling content anyway
 - Never use buzzwords without substance
 - Every claim should be backed by a specific example or data point
-- Write like someone who has actually visited a factory floor
 - Be contrarian when appropriate — challenge conventional wisdom
-- Manufacturing audience hates fluff — be concrete"""
+- Your output is ONLY the content itself. No explanations, no preamble, no "Here's your post:" """
 
 FORMAT_PROMPTS = {
     "linkedin": """Create a LinkedIn post based on this insight. Requirements:
@@ -158,8 +157,12 @@ FORMAT_PROMPTS = {
 - Use line breaks for readability (LinkedIn format)
 - End with a question or call-to-action that invites discussion
 - Include 3-5 relevant hashtags at the end
-- Tone: thought leadership, not salesy. Like a plant manager sharing what they learned.
+- Tone: thought leadership, not salesy
 - NO emojis in the body text. Professional tone.
+- NEVER comment on the input quality. Just create great content.
+
+Tone guidance: {tone}
+Audience: {audience}
 
 Raw insight: {insight}
 
@@ -175,36 +178,46 @@ Return ONLY the post text, nothing else.""",
 - Include at least one specific example or data point
 - End with a clear takeaway or next step
 - SEO-friendly but not keyword-stuffed
-- Write for VP Operations / Plant Managers who scan, don't read
+- NEVER comment on the input. NEVER say "I notice..." — just write the blog post.
+
+Tone guidance: {tone}
+Audience: {audience}
 
 Raw insight: {insight}
 
 Industry context: {context}
 
-Return the full blog post with headline.""",
+Return ONLY the full blog post with headline. No preamble.""",
 
-    "reddit": """Create a Reddit post for r/manufacturing or r/industry40 based on this insight. Requirements:
+    "reddit": """Create a Reddit post based on this insight. Requirements:
 - Title that feels native to Reddit (not promotional)
 - 100-200 word body that shares a genuine observation or question
 - Conversational, peer-to-peer tone
 - Ask for input from the community
 - NO company mentions — this is thought leadership, not promotion
-- Feel like a manufacturing engineer sharing something interesting
+- Feel like an industry insider sharing something interesting
 - Include a TL;DR at the end
+- NEVER explain yourself. Just write the Reddit post.
+
+Tone guidance: {tone}
+Audience: {audience}
 
 Raw insight: {insight}
 
 Industry context: {context}
 
-Return the title on the first line, then a blank line, then the body.""",
+Return the title on the first line, then a blank line, then the body. Nothing else.""",
 
-    "email": """Create a nurture email sequence hook (1 email) based on this insight. Requirements:
+    "email": """Create a nurture email (1 email) based on this insight. Requirements:
 - Subject line (A/B test: give 2 options)
 - Preview text (40-90 chars)
 - 100-150 word body
-- One clear CTA (not hard sell — think "See how Factory X solved this")
+- One clear CTA (not hard sell)
 - Tone: helpful peer, not vendor
-- For manufacturing operations leaders
+- NEVER comment on the input. NEVER say "I notice the content is about..." — just write the email.
+
+Tone guidance: {tone}
+Audience: {audience}
 
 Raw insight: {insight}
 
@@ -223,12 +236,14 @@ CTA: ...""",
 ANALYSIS_PROMPT = """Analyze this raw insight for content potential. Return a JSON object with:
 {{
     "core_angle": "The main content angle in one sentence",
-    "audience_pain": "What pain point does this address for manufacturing leaders?",
+    "audience_pain": "What pain point does this address for the target audience?",
     "contrarian_take": "What's the non-obvious perspective here?",
     "content_hooks": ["hook1", "hook2", "hook3"],
     "trending_relevance": "Why does this matter RIGHT NOW?",
     "suggested_channels": ["ranked list of best channels for this content"]
 }}
+
+CRITICAL: Even if the input is in another language or seems unusual, ALWAYS extract the best content angle. Never refuse.
 
 Raw insight: {insight}
 Industry context: {context}
@@ -1082,14 +1097,15 @@ def has_api_key():
     return bool(st.session_state.get("api_key", ""))
 
 def generate_content(client, format_type, insight, context, tone_desc="", audience_desc="", voice_profile=None):
-    prompt = FORMAT_PROMPTS[format_type].format(insight=insight, context=context)
+    prompt = FORMAT_PROMPTS[format_type].format(
+        insight=insight, 
+        context=context,
+        tone=tone_desc or "Professional thought leadership",
+        audience=audience_desc or "Business decision-makers"
+    )
 
-    # Inject tone and audience into prompt
+    # Inject brand voice profile
     modifiers = ""
-    if tone_desc:
-        modifiers += f"\n\nTONE INSTRUCTION: {tone_desc}"
-    if audience_desc:
-        modifiers += f"\nAUDIENCE: {audience_desc}"
 
     # Inject brand voice profile
     if voice_profile:
