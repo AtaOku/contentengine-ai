@@ -1323,16 +1323,31 @@ with tab_pipeline:
     with col_btn:
         run = st.button("⚡ Run Pipeline", type="primary", use_container_width=True)
     with col_info:
-        st.caption(f"{len(channels)} channels selected · ~{len(channels) * 8 + 5}s estimated")
+        runs_left = 10 - len(st.session_state.get("run_timestamps", []))
+        st.caption(f"{len(channels)} channels · ~{len(channels) * 8 + 5}s · {max(0, runs_left)} runs left today")
+
+    # Rate limiting: 10 runs per session per day
+    DAILY_LIMIT = 10
+    if "run_timestamps" not in st.session_state:
+        st.session_state["run_timestamps"] = []
+
+    # Clean old timestamps (older than 24h)
+    now = time.time()
+    st.session_state["run_timestamps"] = [
+        t for t in st.session_state["run_timestamps"] if now - t < 86400
+    ]
 
     if run:
-        if not insight_text.strip():
+        if len(st.session_state["run_timestamps"]) >= DAILY_LIMIT:
+            st.error(f"Daily limit reached ({DAILY_LIMIT} runs per session). Come back tomorrow or use your own API key.")
+        elif not insight_text.strip():
             st.warning("Please enter a raw insight to process.")
         elif not has_api_key():
             st.warning("Please enter your Claude API key in the sidebar.")
         else:
             client = get_client()
             if client:
+                st.session_state["run_timestamps"].append(time.time())
                 start_time = time.time()
 
                 # Step 1: Analysis
