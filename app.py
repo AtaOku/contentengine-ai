@@ -500,8 +500,96 @@ Content:
 
 Return ONLY valid JSON, no markdown formatting, no backticks."""
 
+REPURPOSE_PROMPT = """You are a content repurposing expert. Take this long-form content and break it into 
+multiple standalone pieces, each optimized for its target format.
 
-def get_client():
+Source content:
+{content}
+
+Company/industry context:
+{context}
+
+Create exactly these pieces and return as a JSON object:
+{{
+    "title_summary": "One-line summary of the source content",
+    "pieces": [
+        {{
+            "format": "linkedin_post_1",
+            "label": "LinkedIn: [angle/hook description]",
+            "content": "The full LinkedIn post text, 150-250 words, hook-first, with hashtags"
+        }},
+        {{
+            "format": "linkedin_post_2",
+            "label": "LinkedIn: [different angle]",
+            "content": "A DIFFERENT LinkedIn post from a different angle of the same source"
+        }},
+        {{
+            "format": "linkedin_post_3",
+            "label": "LinkedIn: [third angle]",
+            "content": "A THIRD LinkedIn post, maybe a hot take or contrarian view from the content"
+        }},
+        {{
+            "format": "twitter_thread",
+            "label": "X/Twitter: Thread (8-10 tweets)",
+            "content": "1/ Opening tweet that hooks\\n\\n2/ Context...\\n\\n3/ ...each tweet separated by double newline, numbered"
+        }},
+        {{
+            "format": "blog_short",
+            "label": "Blog: Short-form (300 words)",
+            "content": "A concise blog post with headline, 2 sections, clear takeaway"
+        }},
+        {{
+            "format": "email_nurture",
+            "label": "Email: Nurture sequence hook",
+            "content": "Subject A: ...\\nSubject B: ...\\nPreview: ...\\n\\n[body 100-150 words]\\n\\nCTA: ..."
+        }},
+        {{
+            "format": "reddit_post",
+            "label": "Reddit: Discussion starter",
+            "content": "Title on first line\\n\\nBody with peer tone, question at end, TL;DR"
+        }},
+        {{
+            "format": "carousel_outline",
+            "label": "Carousel: LinkedIn/Instagram (8 slides)",
+            "content": "Slide 1 (Hook): ...\\nSlide 2: ...\\nSlide 3: ...\\n...\\nSlide 8 (CTA): ..."
+        }},
+        {{
+            "format": "newsletter_blurb",
+            "label": "Newsletter: Quick blurb (75 words)",
+            "content": "Short, punchy summary for a newsletter section. Link teaser."
+        }},
+        {{
+            "format": "quote_cards",
+            "label": "Quote Cards: 3 shareable quotes",
+            "content": "Quote 1: \\"....\\"\\n\\nQuote 2: \\"....\\"\\n\\nQuote 3: \\"....\\""
+        }}
+    ]
+}}
+
+CRITICAL: Each piece must be a DIFFERENT angle or format — not just the same text reformatted. 
+Extract different insights, stats, or arguments from the source for each piece.
+Return ONLY valid JSON, no markdown formatting, no backticks."""
+
+
+def repurpose_content(client, content, context):
+    """Break long-form content into 10 platform-specific pieces."""
+    prompt = REPURPOSE_PROMPT.format(content=content[:5000], context=context)
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        return json.loads(text.strip()), None
+    except json.JSONDecodeError:
+        return None, "Failed to parse repurposed content."
+    except Exception as e:
+        return None, f"Error: {str(e)[:150]}"
     # Priority: st.secrets > user input
     api_key = ""
     try:
@@ -1201,7 +1289,7 @@ st.markdown("""
     <div class="hero-subtitle">
         Paste an insight, drop a URL, or upload a doc — get publish-ready content for LinkedIn, your blog, Reddit, and email. All at once.
     </div>
-    <div class="hero-badge">Brand Voice Cloning · Quality Scoring · Multi-Source Input</div>
+    <div class="hero-badge">Brand Voice Cloning · Repurpose Mode · Quality Scoring · Multi-Source Input</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1210,16 +1298,16 @@ st.markdown("""
 <div style="background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border: 1px solid #c3d4f7;">
     <div style="font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: #1e3a5f; line-height: 1.6;">
         <strong>How to use:</strong><br>
-        <strong>1.</strong> Go to <strong>Live Pipeline</strong> → paste text, a URL, or upload a PDF/DOCX<br>
-        <strong>2.</strong> Pick your tone and audience → hit <strong>Run Pipeline</strong><br>
-        <strong>3.</strong> Get 4 channel-ready outputs instantly — copy, download, or tweak<br>
-        <strong>→</strong> Want to see examples first? Check <strong>Industry Showcase</strong> — no setup needed.
+        <strong>1.</strong> <strong>Live Pipeline</strong> → paste text, a URL, or upload a file → get 4 channel-ready outputs<br>
+        <strong>2.</strong> <strong>Repurpose</strong> → drop a long blog post or article → get 10 different content pieces<br>
+        <strong>3.</strong> <strong>Industry Showcase</strong> → see pre-generated examples across Tech, Healthcare, Manufacturing
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-tab_pipeline, tab_showcase, tab_architecture = st.tabs([
+tab_pipeline, tab_repurpose, tab_showcase, tab_architecture = st.tabs([
     "🔧 Live Pipeline",
+    "🔄 Repurpose",
     "📦 Industry Showcase",
     "🏗️ Architecture"
 ])
@@ -1463,7 +1551,145 @@ with tab_pipeline:
 </div>""", unsafe_allow_html=True)
 
 
-# ─── TAB 2: Industry Showcase ─────────────────────────────────
+# ─── TAB 2: Repurpose ────────────────────────────────────────
+with tab_repurpose:
+    st.markdown("""
+    ### 🔄 Repurpose: One Piece → 10 Outputs
+
+    Drop in a long blog post, article, or document. The pipeline breaks it into
+    **10 platform-specific pieces** — each from a different angle, not just reformatted.
+    """)
+
+    rep_input_mode = st.radio(
+        "Source content:",
+        ["✍️ Paste text", "🔗 URL", "📄 Upload File"],
+        horizontal=True,
+        key="rep_input_mode"
+    )
+
+    rep_text = ""
+    if rep_input_mode == "🔗 URL":
+        rep_url = st.text_input("Article URL:", placeholder="https://...", key="rep_url")
+        if rep_url:
+            with st.spinner("🔗 Fetching..."):
+                fetched, err = fetch_url_content(rep_url)
+            if err:
+                st.error(err)
+            elif fetched:
+                st.success(f"Extracted {len(fetched.split())} words")
+                rep_text = st.text_area("Source content (edit if needed):", value=fetched, height=250, key="rep_fetched")
+
+    elif rep_input_mode == "📄 Upload File":
+        rep_file = st.file_uploader("Upload source content:", type=["pdf", "txt", "md", "csv", "docx"], key="rep_file")
+        if rep_file:
+            with st.spinner(f"📄 Extracting from {rep_file.name}..."):
+                file_text, err = extract_file_content(rep_file)
+            if err:
+                st.error(err)
+            elif file_text:
+                st.success(f"Extracted {len(file_text.split())} words")
+                rep_text = st.text_area("Source content (edit if needed):", value=file_text, height=250, key="rep_file_text")
+    else:
+        rep_text = st.text_area(
+            "Paste your long-form content:",
+            placeholder="Paste a full blog post, article, whitepaper section, newsletter, or any long-form content you want to break into pieces...",
+            height=250,
+            key="rep_paste"
+        )
+
+    if st.button("🔄 Repurpose into 10 Pieces", type="primary", use_container_width=True, key="rep_run"):
+        if not rep_text.strip():
+            st.warning("Please add some source content first.")
+        elif not has_api_key():
+            st.warning("API key required.")
+        elif len(st.session_state.get("run_timestamps", [])) >= 10:
+            st.error("Daily limit reached. Come back tomorrow.")
+        else:
+            client = get_client()
+            if client:
+                st.session_state["run_timestamps"] = st.session_state.get("run_timestamps", [])
+                st.session_state["run_timestamps"].append(time.time())
+
+                with st.status("🔄 Breaking content into 10 pieces...", expanded=True) as status:
+                    st.write("Analyzing source content...")
+                    st.write("Extracting different angles and insights...")
+                    st.write("Generating platform-specific pieces...")
+                    result, err = repurpose_content(client, rep_text, context)
+
+                    if err:
+                        status.update(label="❌ Error", state="error")
+                        st.error(err)
+                    elif result:
+                        status.update(label=f"✅ Generated {len(result.get('pieces', []))} pieces", state="complete")
+
+                st.markdown("---")
+
+                if result:
+                    st.markdown(f"**Source:** {result.get('title_summary', 'Content repurposed')}")
+                    st.markdown(f"**Pieces generated:** {len(result.get('pieces', []))}")
+                    st.markdown("---")
+
+                    # Format icons
+                    format_icons = {
+                        "linkedin": "💼", "twitter": "🐦", "blog": "📝",
+                        "email": "📧", "reddit": "🟠", "carousel": "🎠",
+                        "newsletter": "📰", "quote": "💬",
+                    }
+
+                    for i, piece in enumerate(result.get("pieces", []), 1):
+                        label = piece.get("label", f"Piece {i}")
+                        fmt = piece.get("format", "")
+                        content = piece.get("content", "")
+
+                        # Get icon
+                        icon = "📄"
+                        for key, ic in format_icons.items():
+                            if key in fmt.lower():
+                                icon = ic
+                                break
+
+                        st.markdown(f'<div class="content-card"><div class="card-label">{icon} {label}</div></div>', unsafe_allow_html=True)
+
+                        # Use appropriate mockup for known formats
+                        if "linkedin" in fmt.lower():
+                            st.markdown(render_linkedin_mockup(content), unsafe_allow_html=True)
+                        elif "reddit" in fmt.lower():
+                            st.markdown(render_reddit_mockup(content), unsafe_allow_html=True)
+                        elif "email" in fmt.lower():
+                            st.markdown(render_email_mockup(content), unsafe_allow_html=True)
+                        elif "blog" in fmt.lower():
+                            st.markdown(render_blog_mockup(content), unsafe_allow_html=True)
+                        else:
+                            # Generic card for other formats
+                            safe_content = content.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+                            st.markdown(f"""
+<div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:1.25rem; margin:0.5rem 0; font-size:0.9rem; line-height:1.7; white-space:pre-wrap; color:#374151;">
+{safe_content}
+</div>""", unsafe_allow_html=True)
+
+                        with st.expander("📋 Copy raw text"):
+                            st.text_area(f"piece_{i}", value=content, height=150, key=f"rep_piece_{i}", label_visibility="collapsed")
+                            st.download_button(f"Download", content, file_name=f"repurposed_{fmt}.txt", key=f"dl_rep_{i}")
+
+                    # Download all
+                    st.markdown("---")
+                    all_content = "\n\n" + "="*60 + "\n\n"
+                    all_content = all_content.join([
+                        f"[{p.get('label', f'Piece {i}')}]\n\n{p.get('content', '')}"
+                        for i, p in enumerate(result.get("pieces", []), 1)
+                    ])
+                    st.download_button(
+                        "📦 Download All 10 Pieces",
+                        all_content,
+                        file_name=f"repurposed_all_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                        mime="text/plain",
+                        type="primary",
+                        use_container_width=True,
+                        key="dl_rep_all"
+                    )
+
+
+# ─── TAB 3: Industry Showcase ─────────────────────────────────
 with tab_showcase:
     st.markdown("""
     ### 📦 See It in Action
@@ -1503,7 +1729,7 @@ with tab_showcase:
     st.info("💡 **Same insight, 4 platforms, different voice each time.** Switch industries above to compare. Then try it yourself in the Live Pipeline tab.")
 
 
-# ─── TAB 3: Architecture ─────────────────────────────────────
+# ─── TAB 4: Architecture ─────────────────────────────────────
 with tab_architecture:
     st.markdown("""
     ### 🏗️ How ContentEngine Works
