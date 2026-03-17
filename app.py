@@ -10,6 +10,8 @@ import streamlit as st
 import anthropic
 import json
 import time
+import requests
+from bs4 import BeautifulSoup
 from datetime import datetime
 
 # ── Page Config ──────────────────────────────────────────────
@@ -235,6 +237,50 @@ Return ONLY valid JSON, no markdown formatting, no backticks."""
 
 
 # ── Helpers ──────────────────────────────────────────────────
+
+def fetch_url_content(url):
+    """Fetch and extract main text content from a URL."""
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ContentEngine/1.0"
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        # Remove scripts, styles, nav, footer
+        for tag in soup(["script", "style", "nav", "footer", "header", "aside", "form"]):
+            tag.decompose()
+
+        # Try article tag first, then main, then body
+        content = soup.find("article") or soup.find("main") or soup.find("body")
+        if not content:
+            return None, "Could not extract content from the page."
+
+        text = content.get_text(separator="\n", strip=True)
+
+        # Clean up: remove excessive blank lines, limit length
+        lines = [l.strip() for l in text.split("\n") if l.strip()]
+        clean_text = "\n".join(lines)
+
+        # Truncate to ~3000 chars to keep prompt manageable
+        if len(clean_text) > 3000:
+            clean_text = clean_text[:3000] + "\n\n[...truncated]"
+
+        # Get title
+        title = soup.find("title")
+        title_text = title.get_text(strip=True) if title else ""
+
+        if title_text:
+            clean_text = f"Title: {title_text}\n\n{clean_text}"
+
+        return clean_text, None
+    except requests.exceptions.Timeout:
+        return None, "Request timed out. Try a different URL."
+    except requests.exceptions.RequestException as e:
+        return None, f"Failed to fetch URL: {str(e)[:100]}"
+    except Exception as e:
+        return None, f"Error extracting content: {str(e)[:100]}"
 
 def get_client():
     api_key = st.session_state.get("api_key", "")
@@ -560,16 +606,43 @@ tab_pipeline, tab_generic, tab_workerbase, tab_architecture = st.tabs([
 with tab_pipeline:
     st.markdown("### 📥 Drop Your Raw Insight")
 
-    demo_choice = st.selectbox(
-        "Quick-start with a demo insight, or write your own:",
-        ["— Write your own —"] + list(DEMO_INSIGHTS.keys()),
+    input_mode = st.radio(
+        "Input method:",
+        ["✍️ Write / Paste text", "🔗 Import from URL", "📦 Demo insight"],
+        horizontal=True,
     )
 
-    if demo_choice != "— Write your own —":
+    if input_mode == "📦 Demo insight":
+        demo_choice = st.selectbox(
+            "Select a demo insight:",
+            list(DEMO_INSIGHTS.keys()),
+        )
         demo = DEMO_INSIGHTS[demo_choice]
         insight_text = st.text_area("Raw insight", value=demo["insight"].strip(), height=140)
         context = demo["context"].strip()
-    else:
+
+    elif input_mode == "🔗 Import from URL":
+        url_input = st.text_input(
+            "Article / post URL",
+            placeholder="https://techcrunch.com/2026/... or any article URL",
+        )
+        if url_input:
+            with st.spinner("🔗 Fetching article content..."):
+                fetched_text, error = fetch_url_content(url_input)
+            if error:
+                st.error(error)
+                insight_text = ""
+            else:
+                st.success(f"Extracted {len(fetched_text.split())} words from URL")
+                insight_text = st.text_area(
+                    "Extracted content (edit if needed):",
+                    value=fetched_text,
+                    height=200,
+                )
+        else:
+            insight_text = ""
+
+    else:  # Write / Paste text
         insight_text = st.text_area(
             "Raw insight",
             placeholder="Paste a news headline, competitor move, customer quote, Reddit thread, or any raw signal...",
