@@ -1060,27 +1060,25 @@ def render_carousel_slide(slide, seed=1):
 # ── Image Generation (Free — Pollinations.ai) ────────────────
 
 def generate_image_url(prompt, width=1200, height=630, seed=None):
-    """Generate a free AI image URL via Pollinations.ai. No API key needed."""
+    """Generate a free AI image URL via Pollinations.ai. Falls back to placeholder."""
     import urllib.parse
-    # Keep prompts SHORT — Pollinations fails on long/complex prompts
-    clean_prompt = prompt.strip()[:200]
+    clean_prompt = prompt.strip()[:150]
     encoded = urllib.parse.quote(clean_prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&nologo=true&model=flux"
+    # Use flux model, shorter prompts for reliability
+    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&nologo=true&model=flux&safe=true"
     if seed:
         url += f"&seed={seed}"
     return url
 
 
 def get_blog_header_prompt(blog_content):
-    """Extract a visual prompt from blog content for header image."""
     lines = blog_content.strip().split("\n")
-    headline = lines[0].lstrip("# ").strip()[:60] if lines else "Business"
-    return f"minimalist blog header, abstract shapes, blue indigo gradient, modern, no text, {headline}"
+    headline = lines[0].lstrip("# ").strip()[:50] if lines else "Business"
+    return f"minimalist blog header, abstract, blue gradient, {headline}"
 
 
 def get_quote_card_prompt(quote_text):
-    """Generate a visual prompt for a quote card background."""
-    return "elegant dark gradient background, navy gold accent, minimal, no text, abstract bokeh"
+    return "dark gradient background, navy gold, minimal, abstract"
 
 
 def render_image_with_fallback(url, caption="", width=None):
@@ -1094,17 +1092,20 @@ def render_image_with_fallback(url, caption="", width=None):
 
 
 def show_image_with_download(img_url, caption, key_suffix, filename="generated_image.png"):
-    """Show AI image with download link. Client-side rendering — no server fetch needed."""
+    """Show AI image with graceful CSS fallback if generation fails."""
     st.markdown(f"""
-<div style="border-radius:10px; overflow:hidden; margin:0.5rem 0; border:1px solid #e5e7eb;">
-    <img src="{img_url}" style="width:100%; display:block; min-height:100px; background:#f1f5f9;" alt="{caption}" loading="lazy"
-         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-    <div style="display:none; padding:1.5rem; background:#f8fafc; align-items:center; justify-content:center; gap:8px; color:#94a3b8; font-size:0.85rem;">
-        🖼️ Image generating... <a href="{img_url}" target="_blank" style="color:#6366f1;">Open directly</a>
+<div style="border-radius:10px; overflow:hidden; margin:0.5rem 0; border:1px solid #e5e7eb; position:relative;">
+    <div id="img_fallback_{key_suffix}" style="width:100%; height:200px; background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%); display:flex; align-items:center; justify-content:center;">
+        <span style="color:rgba(255,255,255,0.4); font-size:0.85rem;">🖼️ AI visual loading...</span>
     </div>
-    <div style="padding:8px 12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; border-top:1px solid #e5e7eb;">
-        <span style="color:#64748b;">{caption}</span>
-        <a href="{img_url}" download="{filename}" target="_blank" style="color:#6366f1; text-decoration:none; font-weight:600;">⬇️ Download</a>
+    <img src="{img_url}" 
+         style="width:100%; display:block; position:absolute; top:0; left:0;" 
+         loading="lazy"
+         onload="this.style.position='relative'; document.getElementById('img_fallback_{key_suffix}').style.display='none';"
+         onerror="this.style.display='none';">
+    <div style="padding:6px 12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; border-top:1px solid #e5e7eb;">
+        <span style="color:#94a3b8;">{caption}</span>
+        <a href="{img_url}" target="_blank" style="color:#6366f1; text-decoration:none;">Open image ↗</a>
     </div>
 </div>""", unsafe_allow_html=True)
 
