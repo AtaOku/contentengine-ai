@@ -1954,6 +1954,10 @@ with tab_pipeline:
                         results[ch] = generate_content(client, ch, insight_text, context, tone_desc, audience_desc, voice_profile)
                     progress.progress((i + 1) / len(channels))
 
+                # Save results for Content Chain and Carousel (survive reruns)
+                st.session_state["pipeline_results"] = results
+                st.session_state["pipeline_channel_labels"] = channel_labels
+
                 elapsed = time.time() - start_time
 
                 # Stats
@@ -2056,72 +2060,6 @@ with tab_pipeline:
                         key="dl_all_txt"
                     )
 
-                # ── Content Chain (cross-linking strategy) ────
-                st.markdown("---")
-                if st.button("🔗 Generate Content Chain (distribution strategy)", key="gen_chain"):
-                    with st.spinner("🔗 Building cross-linking strategy..."):
-                        chain, err = generate_content_chain(client, results, channel_labels)
-                    if chain:
-                        st.markdown("### 🔗 Content Chain — Distribution Strategy")
-
-                        # Timing
-                        st.markdown(f"""
-<div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:1rem; margin:0.5rem 0;">
-    <strong>📅 Recommended timing:</strong> {chain.get('timing_suggestion', 'N/A')}
-</div>""", unsafe_allow_html=True)
-
-                        # Distribution order
-                        st.markdown("**Publishing order:**")
-                        for j, step in enumerate(chain.get("distribution_order", []), 1):
-                            st.markdown(f"{j}. {step}")
-
-                        # Cross-references
-                        st.markdown("**Cross-references:**")
-                        for ref in chain.get("cross_references", []):
-                            st.markdown(f"- **{ref.get('from', '?')}** → **{ref.get('to', '?')}**: {ref.get('how', '')}")
-
-                        # Ecosystem
-                        st.markdown(f"""
-<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); border:1px solid #c4b5fd; border-radius:10px; padding:1rem; margin:0.75rem 0;">
-    <strong>🌐 Content ecosystem:</strong><br>{chain.get('content_ecosystem', 'N/A')}
-</div>""", unsafe_allow_html=True)
-                    elif err:
-                        st.error(err)
-
-                # ── Carousel Builder ──────────────────────
-                if "blog" in results:
-                    st.markdown("---")
-                    if st.button("🎠 Generate Visual Carousel from Blog", key="gen_carousel"):
-                        with st.spinner("🎠 Building carousel slides..."):
-                            carousel_data, err = generate_carousel(client, results["blog"])
-                        if carousel_data:
-                            st.markdown("### 🎠 LinkedIn/Instagram Carousel — 8 Slides")
-                            slides = carousel_data.get("slides", [])
-
-                            # Render slides in 2-column grid
-                            for row_start in range(0, len(slides), 2):
-                                cols = st.columns(2)
-                                for col_idx, slide_idx in enumerate(range(row_start, min(row_start + 2, len(slides)))):
-                                    with cols[col_idx]:
-                                        st.markdown(render_carousel_slide(slides[slide_idx], seed=slide_idx), unsafe_allow_html=True)
-
-                            # Download all slides as text
-                            slides_text = "\n\n".join([
-                                f"--- SLIDE {s.get('slide_number', i)} ({s.get('type', 'content')}) ---\n"
-                                f"Headline: {s.get('headline', '')}\n"
-                                f"Body: {s.get('body', '')}\n"
-                                f"Visual: {s.get('visual_prompt', '')}"
-                                for i, s in enumerate(slides, 1)
-                            ])
-                            st.download_button(
-                                "📦 Download Carousel Script",
-                                slides_text,
-                                file_name=f"carousel_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-                                mime="text/plain",
-                                key="dl_carousel"
-                            )
-                        elif err:
-                            st.error(err)
 
                 # Quality scoring (optional)
                 if enable_scoring:
@@ -2138,21 +2076,66 @@ with tab_pipeline:
                         scores = all_scores.get(ch)
                         if scores:
                             overall = scores.get("overall", "?")
-                            # Color based on score
                             color = "#22c55e" if overall >= 7 else "#f59e0b" if overall >= 5 else "#ef4444"
+                            st.markdown(f"""<div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid {color}; border-radius:8px; padding:1rem; margin:0.5rem 0; font-size:0.85rem;">
+<strong>{channel_labels[ch]} — {overall}/10</strong> · Hook: {scores.get('hook_strength',{}).get('score','?')} · Read: {scores.get('readability',{}).get('score','?')} · Specific: {scores.get('specificity',{}).get('score','?')} · Fit: {scores.get('channel_fit',{}).get('score','?')} · CTA: {scores.get('cta_clarity',{}).get('score','?')}<br><span style="color:#6366f1;">Improve: {scores.get('one_line_improvement','N/A')}</span></div>""", unsafe_allow_html=True)
 
-                            st.markdown(f"""
-<div class="content-card" style="border-left: 4px solid {color};">
-    <div class="card-label">{channel_labels[ch]} — Score: {overall}/10</div>
-    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
-        <span>🪝 Hook: <strong>{scores.get('hook_strength',{}).get('score','?')}</strong></span>
-        <span>📖 Read: <strong>{scores.get('readability',{}).get('score','?')}</strong></span>
-        <span>🎯 Specific: <strong>{scores.get('specificity',{}).get('score','?')}</strong></span>
-        <span>📱 Fit: <strong>{scores.get('channel_fit',{}).get('score','?')}</strong></span>
-        <span>👆 CTA: <strong>{scores.get('cta_clarity',{}).get('score','?')}</strong></span>
-    </div>
-    <div style="font-size:0.9rem; color:#6366f1;"><strong>Top improvement:</strong> {scores.get('one_line_improvement','N/A')}</div>
-</div>""", unsafe_allow_html=True)
+    # ── Content Chain & Carousel (OUTSIDE if run — survives Streamlit reruns) ──
+    saved_results = st.session_state.get("pipeline_results", {})
+    saved_labels = st.session_state.get("pipeline_channel_labels", {})
+
+    if saved_results:
+        st.markdown("---")
+        st.markdown("### 🔗 Next Steps")
+        col_chain, col_carousel = st.columns(2)
+
+        with col_chain:
+            if st.button("🔗 Content Chain (distribution plan)", key="gen_chain", use_container_width=True):
+                client = get_client()
+                if client:
+                    with st.spinner("🔗 Building distribution strategy..."):
+                        chain_result, chain_err = generate_content_chain(client, saved_results, saved_labels)
+                    if chain_result:
+                        st.session_state["chain_result"] = chain_result
+                    elif chain_err:
+                        st.error(chain_err)
+
+        with col_carousel:
+            if "blog" in saved_results:
+                if st.button("🎠 Carousel from Blog", key="gen_carousel", use_container_width=True):
+                    client = get_client()
+                    if client:
+                        with st.spinner("🎠 Building carousel..."):
+                            car_data, car_err = generate_carousel(client, saved_results["blog"])
+                        if car_data:
+                            st.session_state["carousel_result"] = car_data
+                        elif car_err:
+                            st.error(car_err)
+
+        # Show Content Chain result (persists across reruns)
+        if "chain_result" in st.session_state:
+            chain = st.session_state["chain_result"]
+            st.markdown("#### 🔗 Distribution Strategy")
+            st.markdown(f"""<div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:1rem; margin:0.5rem 0;">
+<strong>📅 Timing:</strong> {chain.get('timing_suggestion', 'N/A')}</div>""", unsafe_allow_html=True)
+            for j, step in enumerate(chain.get("distribution_order", []), 1):
+                st.markdown(f"{j}. {step}")
+            st.markdown("**Cross-references:**")
+            for ref in chain.get("cross_references", []):
+                st.markdown(f"- **{ref.get('from', '?')}** → **{ref.get('to', '?')}**: {ref.get('how', '')}")
+
+        # Show Carousel result (persists across reruns)
+        if "carousel_result" in st.session_state:
+            car = st.session_state["carousel_result"]
+            st.markdown("#### 🎠 Carousel Slides")
+            slides = car.get("slides", [])
+            for row_start in range(0, len(slides), 2):
+                cols_c = st.columns(2)
+                for ci, si in enumerate(range(row_start, min(row_start + 2, len(slides)))):
+                    with cols_c[ci]:
+                        st.markdown(render_carousel_slide(slides[si], seed=si), unsafe_allow_html=True)
+            slides_text = "\n\n".join([f"SLIDE {s.get('slide_number', i)}: {s.get('headline', '')}\n{s.get('body', '')}" for i, s in enumerate(slides, 1)])
+            st.download_button("📦 Download Carousel", slides_text, file_name="carousel.txt", mime="text/plain", key="dl_carousel")
 
 
 # ─── TAB 2: Repurpose ────────────────────────────────────────
