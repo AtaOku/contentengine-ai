@@ -1520,7 +1520,27 @@ AI rewards speed, data, and openness. Apple's DNA is control, privacy, and secre
 
 We broke down the 5 structural reasons Apple is losing the AI race — and what it means for the broader tech ecosystem.
 
-CTA: Read the full analysis → [link]"""
+CTA: Read the full analysis → [link]""",
+        "carousel_slides": [
+            {"slide_number": 1, "type": "hook", "headline": "Apple spent $100B on R&D", "body": "Their AI summarized a headline so badly it made global news."},
+            {"slide_number": 2, "type": "content", "headline": "The Control Paradox", "body": "Apple's closed ecosystem built the most profitable tech company. But AI rewards speed, data, and openness."},
+            {"slide_number": 3, "type": "stat", "headline": "Google: weekly updates", "body": "OpenAI: monthly breakthroughs. Apple: annual releases. In AI, annual = geological."},
+            {"slide_number": 4, "type": "content", "headline": "The Data Problem", "body": "Google processes billions of queries daily. Apple deliberately doesn't access equivalent user data. Privacy is noble — but it's a training data disadvantage."},
+            {"slide_number": 5, "type": "content", "headline": "Open vs. Closed", "body": "Meta open-sourced Llama. Google open-sourced Gemma. The biggest AI breakthroughs come from open research. Apple's secrecy culture is the opposite."},
+            {"slide_number": 6, "type": "stat", "headline": "2-3 years behind", "body": "Not a temporary setback. A structural mismatch between Apple's DNA and what AI demands."},
+            {"slide_number": 7, "type": "content", "headline": "The Real Question", "body": "Can the closed-ecosystem model survive the AI era at all? Or will the intelligence layer be built entirely in the open?"},
+            {"slide_number": 8, "type": "cta", "headline": "What's your take?", "body": "Can Apple adapt, or is this a fundamental disadvantage? Comment below."},
+        ],
+        "distribution": {
+            "timing": "Blog Monday 8AM → LinkedIn Monday 12PM → Reddit Tuesday 9AM → Email Wednesday 7AM",
+            "order": ["Blog first (SEO anchor + most detail)", "LinkedIn same day (drive traffic to blog)", "Reddit next day (separate audience, peer discussion)", "Email mid-week (nurture sequence, link to blog)"],
+            "cross_refs": [
+                {"from": "LinkedIn", "to": "Blog", "how": "End LinkedIn post with: 'Full analysis on our blog → [link]'"},
+                {"from": "Email", "to": "Blog", "how": "CTA button links directly to blog post"},
+                {"from": "Reddit", "to": "None", "how": "No links — pure thought leadership, build credibility"},
+            ],
+            "ecosystem": "Blog is the hub. LinkedIn drives professional traffic. Reddit builds community credibility. Email nurtures existing audience. Four pieces, one narrative arc."
+        }
     },
 
     "🏥 Healthcare — GLP-1 Drugs Are Disrupting Everything": {
@@ -1621,7 +1641,27 @@ The wildcard: these drugs appear to reduce compulsive behavior broadly — alcoh
 
 We mapped the cross-industry impact of GLP-1 adoption across 6 sectors — with the data points and projections most analysts are missing.
 
-CTA: See the GLP-1 cross-industry impact map → [link]"""
+CTA: See the GLP-1 cross-industry impact map → [link]""",
+        "carousel_slides": [
+            {"slide_number": 1, "type": "hook", "headline": "Not AI. A diabetes drug.", "body": "The most disruptive technology of 2024-2026 is a molecule, not software."},
+            {"slide_number": 2, "type": "stat", "headline": "Airlines: $80M/year savings", "body": "If passengers weigh less, fuel costs drop. One carrier ran the numbers."},
+            {"slide_number": 3, "type": "content", "headline": "Walmart: less food sold", "body": "GLP-1 users buy measurably less food. Not different food — less, period. Snack companies are panicking."},
+            {"slide_number": 4, "type": "stat", "headline": "Surgery down 15-20%", "body": "Bariatric surgery volumes declining at major hospital systems. A $2.5B market disrupted by a weekly injection."},
+            {"slide_number": 5, "type": "content", "headline": "The addiction wildcard", "body": "Users report less alcohol, gambling, nicotine cravings. GLP-1 receptors exist throughout the brain's reward system."},
+            {"slide_number": 6, "type": "content", "headline": "Insurance rethinks everything", "body": "If 30% of obese adults normalize weight, mortality projections change. Actuarial tables need rewriting."},
+            {"slide_number": 7, "type": "stat", "headline": "6+ industries disrupted", "body": "Airlines, food, surgery, insurance, orthopedics, addiction treatment. All from one drug class."},
+            {"slide_number": 8, "type": "cta", "headline": "What effects are you watching?", "body": "Which second-order GLP-1 impact surprises you most?"},
+        ],
+        "distribution": {
+            "timing": "Blog Monday 8AM → LinkedIn Monday 2PM → Email Tuesday 8AM → Reddit Wednesday 10AM",
+            "order": ["Blog first (comprehensive analysis, SEO value)", "LinkedIn same day afternoon (data-heavy hook)", "Email next morning (drives blog traffic)", "Reddit mid-week (community discussion, no promotion)"],
+            "cross_refs": [
+                {"from": "LinkedIn", "to": "Blog", "how": "Link to full cross-industry analysis in first comment"},
+                {"from": "Email", "to": "Blog", "how": "CTA: 'See the full GLP-1 impact map'"},
+                {"from": "Reddit", "to": "None", "how": "Pure discussion — ask community for their observations"},
+            ],
+            "ecosystem": "Blog is the definitive resource. LinkedIn captures the stat-driven professional audience. Email nurtures subscribers with exclusive framing. Reddit generates authentic discussion and surfaces angles you missed."
+        }
     },
 
     "🏭 Manufacturing — The $200B Reshoring Blind Spot": {
@@ -1630,6 +1670,26 @@ CTA: See the GLP-1 cross-industry impact map → [link]"""
         "blog": PREGENERATED["blog"],
         "reddit": PREGENERATED["reddit"],
         "email": PREGENERATED["email"],
+        "carousel_slides": [
+            {"slide_number": 1, "type": "hook", "headline": "$200 billion blind spot", "body": "Everyone's celebrating reshoring. Nobody's asking: who's going to run these factories?"},
+            {"slide_number": 2, "type": "stat", "headline": "2.1M jobs unfilled by 2030", "body": "Deloitte's projection was calculated BEFORE the current construction boom."},
+            {"slide_number": 3, "type": "content", "headline": "No veterans to shadow", "body": "Greenfield factories have zero institutional knowledge. No 'ask Bob, he's been here 30 years.'"},
+            {"slide_number": 4, "type": "content", "headline": "Old model is broken", "body": "6-month apprenticeships don't work when average tenure is under 3 years."},
+            {"slide_number": 5, "type": "content", "headline": "Digital-first beats train-first", "body": "Embed knowledge in the workflow, not the worker's memory. Real-time guidance on the shop floor."},
+            {"slide_number": 6, "type": "stat", "headline": "12 weeks → 3 weeks", "body": "One auto supplier cut onboarding by 75% with digital guidance. Quality defects down 25%."},
+            {"slide_number": 7, "type": "content", "headline": "Greenfield advantage", "body": "No legacy systems. No resistance. Build digital-first from day one."},
+            {"slide_number": 8, "type": "cta", "headline": "How are you handling it?", "body": "How is your factory solving knowledge transfer to new workers?"},
+        ],
+        "distribution": {
+            "timing": "Blog Tuesday 8AM → LinkedIn Tuesday 1PM → Reddit Thursday 10AM → Email Friday 8AM",
+            "order": ["Blog first (in-depth analysis with data)", "LinkedIn same day (reshoring narrative hook)", "Reddit two days later (peer discussion with plant managers)", "Email end of week (nurture with case study link)"],
+            "cross_refs": [
+                {"from": "LinkedIn", "to": "Blog", "how": "First comment: 'Full analysis with the Deloitte data → [blog link]'"},
+                {"from": "Email", "to": "Blog", "how": "CTA: 'See how leading manufacturers are solving this'"},
+                {"from": "Reddit", "to": "None", "how": "Zero promotion — ask genuine question, build credibility"},
+            ],
+            "ecosystem": "Blog establishes thought leadership with data. LinkedIn captures executive attention with the $200B hook. Reddit validates with practitioner community. Email converts interested readers to pipeline."
+        }
     }
 }
 
@@ -2527,7 +2587,52 @@ with tab_showcase:
             st.download_button(f"Copy {key}", demo_data[key], file_name=f"showcase_{key}.txt", key=f"dl_sc_{key}_{hash(selected_demo) % 10000}")
         st.markdown("---")
 
-    st.info("💡 **Same insight, 4 platforms, different voice each time.** Switch industries above to compare. Then try it yourself in the Live Pipeline tab.")
+    # ── Carousel Slides (pre-generated) ──
+    carousel_slides = demo_data.get("carousel_slides", [])
+    if carousel_slides:
+        st.markdown('<div class="card-label">🎠 LINKEDIN / INSTAGRAM CAROUSEL — 8 SLIDES</div>', unsafe_allow_html=True)
+
+        for row_start in range(0, len(carousel_slides), 2):
+            cols = st.columns(2)
+            for col_idx, slide_idx in enumerate(range(row_start, min(row_start + 2, len(carousel_slides)))):
+                with cols[col_idx]:
+                    st.markdown(render_carousel_slide(carousel_slides[slide_idx], seed=slide_idx), unsafe_allow_html=True)
+
+        # Download carousel script
+        slides_text = "\n\n".join([
+            f"--- SLIDE {s['slide_number']} ({s['type']}) ---\nHeadline: {s['headline']}\nBody: {s['body']}"
+            for s in carousel_slides
+        ])
+        st.download_button("📦 Download Carousel Script", slides_text,
+            file_name="carousel_script.txt", mime="text/plain",
+            key=f"dl_sc_carousel_{hash(selected_demo) % 10000}")
+        st.markdown("---")
+
+    # ── Distribution Strategy (pre-generated) ──
+    dist = demo_data.get("distribution", {})
+    if dist:
+        st.markdown('<div class="card-label">🔗 DISTRIBUTION STRATEGY</div>', unsafe_allow_html=True)
+
+        st.markdown(f"""
+<div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:1rem; margin:0.75rem 0;">
+    <strong>📅 Recommended timing:</strong> {dist.get('timing', 'N/A')}
+</div>""", unsafe_allow_html=True)
+
+        st.markdown("**Publishing order:**")
+        for j, step in enumerate(dist.get("order", []), 1):
+            st.markdown(f"{j}. {step}")
+
+        st.markdown("**Cross-references:**")
+        for ref in dist.get("cross_refs", []):
+            st.markdown(f"- **{ref.get('from', '?')}** → **{ref.get('to', '?')}**: {ref.get('how', '')}")
+
+        st.markdown(f"""
+<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); border:1px solid #c4b5fd; border-radius:10px; padding:1rem; margin:0.75rem 0;">
+    <strong>🌐 Content ecosystem:</strong><br>{dist.get('ecosystem', 'N/A')}
+</div>""", unsafe_allow_html=True)
+        st.markdown("---")
+
+    st.info("💡 **Same insight → 4 channels + carousel + distribution plan.** Switch industries above to compare. Then try it yourself in the Pipeline tab.")
 
 
 # ─── TAB 4: Architecture ─────────────────────────────────────
