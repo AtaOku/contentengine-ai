@@ -502,10 +502,27 @@ Return ONLY valid JSON, no markdown formatting, no backticks."""
 
 
 def get_client():
-    api_key = st.session_state.get("api_key", "")
+    # Priority: st.secrets > user input
+    api_key = ""
+    try:
+        api_key = st.secrets.get("ANTHROPIC_API_KEY", "")
+    except Exception:
+        pass
+    if not api_key:
+        api_key = st.session_state.get("api_key", "")
     if not api_key:
         return None
     return anthropic.Anthropic(api_key=api_key)
+
+
+def has_api_key():
+    """Check if API key is available from any source."""
+    try:
+        if st.secrets.get("ANTHROPIC_API_KEY", ""):
+            return True
+    except Exception:
+        pass
+    return bool(st.session_state.get("api_key", ""))
 
 def generate_content(client, format_type, insight, context, tone_desc="", audience_desc="", voice_profile=None):
     prompt = FORMAT_PROMPTS[format_type].format(insight=insight, context=context)
@@ -925,12 +942,23 @@ CTA: Get the employee content playbook → [link]"""
 
 with st.sidebar:
     st.markdown("### ⚙️ Configuration")
-    api_key = st.text_input(
-        "Claude API Key",
-        type="password",
-        help="Your Anthropic API key. Session only — never stored.",
-        key="api_key"
-    )
+
+    # Check if API key is in secrets (server-side)
+    _secrets_key = ""
+    try:
+        _secrets_key = st.secrets.get("ANTHROPIC_API_KEY", "")
+    except Exception:
+        pass
+
+    if _secrets_key:
+        st.success("✅ API connected", icon="🔑")
+    else:
+        api_key = st.text_input(
+            "Claude API Key",
+            type="password",
+            help="Your Anthropic API key. Session only — never stored.",
+            key="api_key"
+        )
 
     st.divider()
 
@@ -993,7 +1021,7 @@ with st.sidebar:
                 elif err:
                     st.error(err)
             else:
-                st.warning("Enter API key first.")
+                st.warning("API key required. Add it in the sidebar or configure Streamlit Secrets.")
 
         if "voice_profile" in st.session_state:
             st.markdown(f"✅ **Voice loaded:** {st.session_state['voice_profile'].get('tone_markers', 'Custom')[:40]}")
@@ -1153,7 +1181,7 @@ with tab_pipeline:
     if run:
         if not insight_text.strip():
             st.warning("Please enter a raw insight to process.")
-        elif not api_key:
+        elif not has_api_key():
             st.warning("Please enter your Claude API key in the sidebar.")
         else:
             client = get_client()
@@ -1347,8 +1375,8 @@ with tab_architecture:
     st.markdown("""
     ### 🏗️ How ContentEngine Works
 
-    This isn't a wrapper around ChatGPT. It's a **structured pipeline** with
-    domain-specific prompt engineering at every stage.
+    A **structured pipeline** with domain-specific prompt engineering,
+    brand voice cloning, and multi-source content extraction.
     """)
 
     st.markdown("---")
