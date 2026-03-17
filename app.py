@@ -820,6 +820,243 @@ def render_seo_panel(seo_data):
 </div>"""
 
 
+# ── Trend Radar ──────────────────────────────────────────────
+
+TREND_RADAR_PROMPT = """You are a content strategist scanning for trending topics and content opportunities.
+
+Industry/niche: {industry}
+Company context: {context}
+
+Identify 8 trending topics, news stories, or emerging conversations that a content team should write about THIS WEEK. For each, return:
+
+{{
+    "trends": [
+        {{
+            "title": "Short punchy title",
+            "summary": "2-3 sentence explanation of the trend",
+            "why_now": "Why this matters right now (timeliness)",
+            "content_angles": ["angle 1", "angle 2", "angle 3"],
+            "best_channels": ["linkedin", "blog", "reddit", "email"],
+            "urgency": "high/medium/low",
+            "sample_hook": "A ready-to-use opening line for a LinkedIn post about this"
+        }}
+    ]
+}}
+
+Focus on:
+- Conversations already happening on LinkedIn, Reddit, and industry publications
+- Competitor moves or industry shifts
+- Data releases, research findings, regulatory changes
+- Contrarian takes on popular narratives
+
+Return ONLY valid JSON, no markdown formatting, no backticks."""
+
+
+def scan_trends(client, industry, context):
+    """Scan for trending content opportunities."""
+    prompt = TREND_RADAR_PROMPT.format(industry=industry, context=context)
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=3000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        return json.loads(text.strip()), None
+    except json.JSONDecodeError:
+        return None, "Failed to parse trends."
+    except Exception as e:
+        return None, f"Error: {str(e)[:150]}"
+
+
+# ── Data-to-Content ──────────────────────────────────────────
+
+DATA_TO_CONTENT_PROMPT = """You are a data analyst who turns raw data into compelling content insights.
+
+Analyze this data and extract 3-5 key insights that would make great content pieces.
+For each insight, explain what story the data tells and suggest a content angle.
+
+Data:
+{data}
+
+Context about the company/industry:
+{context}
+
+Return a JSON object:
+{{
+    "data_summary": "Brief description of the dataset",
+    "insights": [
+        {{
+            "insight": "The key finding in one sentence",
+            "data_evidence": "The specific numbers/trends that support this",
+            "story_angle": "How to frame this as a compelling narrative",
+            "headline_suggestion": "A blog/LinkedIn headline for this insight",
+            "target_audience": "Who cares most about this finding"
+        }}
+    ],
+    "overall_narrative": "The overarching story this data tells"
+}}
+
+Return ONLY valid JSON, no markdown formatting, no backticks."""
+
+
+def analyze_data_for_content(client, data_text, context):
+    """Extract content insights from raw data."""
+    prompt = DATA_TO_CONTENT_PROMPT.format(data=data_text[:4000], context=context)
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        return json.loads(text.strip()), None
+    except json.JSONDecodeError:
+        return None, "Failed to parse data insights."
+    except Exception as e:
+        return None, f"Error: {str(e)[:150]}"
+
+
+# ── Content Chain ────────────────────────────────────────────
+
+CONTENT_CHAIN_PROMPT = """You have generated these content pieces from the same insight. 
+Create a cross-linking and distribution strategy.
+
+Content pieces:
+{pieces}
+
+Return a JSON object:
+{{
+    "distribution_order": ["Which piece to publish first, second, etc. with reasoning"],
+    "cross_references": [
+        {{
+            "from": "channel name",
+            "to": "channel name",
+            "how": "Specific instruction on how to reference (e.g., 'In the LinkedIn post, add: Read the full analysis on our blog [link]')"
+        }}
+    ],
+    "content_ecosystem": "How these pieces work together as a system — the narrative arc across channels",
+    "timing_suggestion": "Recommended publishing schedule (e.g., Blog Monday AM, LinkedIn Monday PM, Email Tuesday)"
+}}
+
+Return ONLY valid JSON, no markdown formatting, no backticks."""
+
+
+def generate_content_chain(client, results, channel_labels):
+    """Generate cross-linking strategy for content pieces."""
+    pieces_text = "\n\n".join([
+        f"[{channel_labels.get(ch, ch)}]:\n{content[:500]}..."
+        for ch, content in results.items()
+    ])
+    prompt = CONTENT_CHAIN_PROMPT.format(pieces=pieces_text)
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        return json.loads(text.strip()), None
+    except:
+        return None, "Failed to generate content chain."
+
+
+# ── Carousel Builder ─────────────────────────────────────────
+
+CAROUSEL_PROMPT = """Create a LinkedIn/Instagram carousel from this content. 
+Design exactly 8 slides.
+
+Source content:
+{content}
+
+Return a JSON object:
+{{
+    "slides": [
+        {{
+            "slide_number": 1,
+            "type": "hook",
+            "headline": "Bold hook text (max 8 words)",
+            "body": "Supporting text (max 20 words)",
+            "visual_prompt": "Image description for AI generation"
+        }},
+        {{
+            "slide_number": 2,
+            "type": "content",
+            "headline": "Key point (max 8 words)",
+            "body": "Explanation (max 30 words)",
+            "visual_prompt": "Image description"
+        }}
+    ]
+}}
+
+Slide types: hook (slide 1), content (slides 2-6), stat (for data points), cta (last slide).
+Make headlines punchy. Body text scannable. Each slide should work standalone but build a narrative.
+Return ONLY valid JSON, no markdown formatting, no backticks."""
+
+
+def generate_carousel(client, content):
+    """Generate carousel slide content."""
+    prompt = CAROUSEL_PROMPT.format(content=content[:3000])
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        return json.loads(text.strip()), None
+    except json.JSONDecodeError:
+        return None, "Failed to parse carousel."
+    except Exception as e:
+        return None, f"Error: {str(e)[:150]}"
+
+
+def render_carousel_slide(slide, seed=1):
+    """Render a single carousel slide as visual HTML with AI background."""
+    headline = slide.get("headline", "")
+    body = slide.get("body", "")
+    slide_num = slide.get("slide_number", 1)
+    slide_type = slide.get("type", "content")
+
+    # Color schemes per slide type
+    schemes = {
+        "hook": ("linear-gradient(135deg, #1a1a2e, #16213e)", "#818cf8", "#fff"),
+        "content": ("linear-gradient(135deg, #0f172a, #1e293b)", "#60a5fa", "#e2e8f0"),
+        "stat": ("linear-gradient(135deg, #064e3b, #065f46)", "#34d399", "#fff"),
+        "cta": ("linear-gradient(135deg, #4c1d95, #5b21b6)", "#c4b5fd", "#fff"),
+    }
+    bg, accent, text_color = schemes.get(slide_type, schemes["content"])
+
+    safe_h = headline.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+    safe_b = body.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+
+    return f"""
+<div style="width:100%; aspect-ratio:1/1; max-width:400px; background:{bg}; border-radius:16px; padding:2rem; display:flex; flex-direction:column; justify-content:center; position:relative; overflow:hidden; margin:0.5rem auto;">
+    <div style="position:absolute; top:12px; right:16px; font-size:0.7rem; color:rgba(255,255,255,0.3); font-family:'JetBrains Mono',monospace;">{slide_num}/8</div>
+    <div style="font-size:1.5rem; font-weight:800; color:{text_color}; line-height:1.2; margin-bottom:0.75rem; font-family:'DM Sans',sans-serif;">{safe_h}</div>
+    <div style="font-size:0.95rem; color:rgba(255,255,255,0.7); line-height:1.5; font-family:'DM Sans',sans-serif;">{safe_b}</div>
+    <div style="position:absolute; bottom:16px; left:2rem; right:2rem; height:3px; background:rgba(255,255,255,0.1); border-radius:2px;">
+        <div style="width:{slide_num * 12.5}%; height:100%; background:{accent}; border-radius:2px;"></div>
+    </div>
+</div>"""
+
+
 # ── Image Generation (Free — Pollinations.ai) ────────────────
 
 def generate_image_url(prompt, width=1200, height=630, seed=None):
@@ -1657,7 +1894,7 @@ st.markdown("""
     <div class="hero-subtitle">
         Paste an insight, drop a URL, or upload a doc — get publish-ready content for LinkedIn, your blog, Reddit, and email. All at once.
     </div>
-    <div class="hero-badge">Brand Voice Cloning · Repurpose Mode · SEO Analysis · AI Visuals · Quality Scoring</div>
+    <div class="hero-badge">Trend Radar · Pipeline · Repurpose · Data→Content · Voice Cloning · SEO · Carousel · AI Visuals</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1666,18 +1903,21 @@ st.markdown("""
 <div style="background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border: 1px solid #c3d4f7;">
     <div style="font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: #1e3a5f; line-height: 1.6;">
         <strong>How to use:</strong><br>
-        <strong>1.</strong> <strong>Live Pipeline</strong> → paste text, a URL, or upload a file → get 4 channel-ready outputs<br>
-        <strong>2.</strong> <strong>Repurpose</strong> → drop a long blog post or article → get 10 different content pieces<br>
-        <strong>3.</strong> <strong>Industry Showcase</strong> → see pre-generated examples across Tech, Healthcare, Manufacturing
+        <strong>1.</strong> <strong>Pipeline</strong> → paste text, a URL, or upload a file → get 4 channel-ready outputs + carousel<br>
+        <strong>2.</strong> <strong>Repurpose</strong> → drop a long blog post → get 10 different content pieces<br>
+        <strong>3.</strong> <strong>Trend Radar</strong> → enter your industry → discover what to write about this week<br>
+        <strong>4.</strong> <strong>Data → Content</strong> → upload CSV/data → AI extracts insights → turn them into content
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-tab_pipeline, tab_repurpose, tab_showcase, tab_architecture = st.tabs([
-    "🔧 Live Pipeline",
+tab_pipeline, tab_repurpose, tab_trends, tab_data, tab_showcase, tab_architecture = st.tabs([
+    "🔧 Pipeline",
     "🔄 Repurpose",
-    "📦 Industry Showcase",
-    "🏗️ Architecture"
+    "🔍 Trend Radar",
+    "📊 Data → Content",
+    "📦 Showcase",
+    "🏗️ How It Works"
 ])
 
 
@@ -1736,11 +1976,15 @@ with tab_pipeline:
             insight_text = ""
 
     else:  # Write / Paste
+        prefill = st.session_state.pop("prefill_insight", "")
         insight_text = st.text_area(
             "Raw insight",
+            value=prefill if prefill else "",
             placeholder="Paste a news headline, competitor move, customer quote, Reddit thread, press release, or any raw signal...",
             height=140,
         )
+        if prefill:
+            st.success("✅ Insight loaded from Data → Content tab. Hit Run Pipeline!")
 
     # ── Tone & Audience Controls ──────────────────────────────
     st.markdown("---")
@@ -1950,6 +2194,73 @@ with tab_pipeline:
                         key="dl_all_txt"
                     )
 
+                # ── Content Chain (cross-linking strategy) ────
+                st.markdown("---")
+                if st.button("🔗 Generate Content Chain (distribution strategy)", key="gen_chain"):
+                    with st.spinner("🔗 Building cross-linking strategy..."):
+                        chain, err = generate_content_chain(client, results, channel_labels)
+                    if chain:
+                        st.markdown("### 🔗 Content Chain — Distribution Strategy")
+
+                        # Timing
+                        st.markdown(f"""
+<div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:1rem; margin:0.5rem 0;">
+    <strong>📅 Recommended timing:</strong> {chain.get('timing_suggestion', 'N/A')}
+</div>""", unsafe_allow_html=True)
+
+                        # Distribution order
+                        st.markdown("**Publishing order:**")
+                        for j, step in enumerate(chain.get("distribution_order", []), 1):
+                            st.markdown(f"{j}. {step}")
+
+                        # Cross-references
+                        st.markdown("**Cross-references:**")
+                        for ref in chain.get("cross_references", []):
+                            st.markdown(f"- **{ref.get('from', '?')}** → **{ref.get('to', '?')}**: {ref.get('how', '')}")
+
+                        # Ecosystem
+                        st.markdown(f"""
+<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); border:1px solid #c4b5fd; border-radius:10px; padding:1rem; margin:0.75rem 0;">
+    <strong>🌐 Content ecosystem:</strong><br>{chain.get('content_ecosystem', 'N/A')}
+</div>""", unsafe_allow_html=True)
+                    elif err:
+                        st.error(err)
+
+                # ── Carousel Builder ──────────────────────
+                if "blog" in results:
+                    st.markdown("---")
+                    if st.button("🎠 Generate Visual Carousel from Blog", key="gen_carousel"):
+                        with st.spinner("🎠 Building carousel slides..."):
+                            carousel_data, err = generate_carousel(client, results["blog"])
+                        if carousel_data:
+                            st.markdown("### 🎠 LinkedIn/Instagram Carousel — 8 Slides")
+                            slides = carousel_data.get("slides", [])
+
+                            # Render slides in 2-column grid
+                            for row_start in range(0, len(slides), 2):
+                                cols = st.columns(2)
+                                for col_idx, slide_idx in enumerate(range(row_start, min(row_start + 2, len(slides)))):
+                                    with cols[col_idx]:
+                                        st.markdown(render_carousel_slide(slides[slide_idx], seed=slide_idx), unsafe_allow_html=True)
+
+                            # Download all slides as text
+                            slides_text = "\n\n".join([
+                                f"--- SLIDE {s.get('slide_number', i)} ({s.get('type', 'content')}) ---\n"
+                                f"Headline: {s.get('headline', '')}\n"
+                                f"Body: {s.get('body', '')}\n"
+                                f"Visual: {s.get('visual_prompt', '')}"
+                                for i, s in enumerate(slides, 1)
+                            ])
+                            st.download_button(
+                                "📦 Download Carousel Script",
+                                slides_text,
+                                file_name=f"carousel_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                                mime="text/plain",
+                                key="dl_carousel"
+                            )
+                        elif err:
+                            st.error(err)
+
                 # Quality scoring (optional)
                 if enable_scoring:
                     st.markdown("---")
@@ -2147,7 +2458,172 @@ with tab_repurpose:
                         )
 
 
-# ─── TAB 3: Industry Showcase ─────────────────────────────────
+# ─── TAB 3: Trend Radar ──────────────────────────────────────
+with tab_trends:
+    st.markdown("""
+    ### 🔍 Trend Radar — What Should You Write About This Week?
+
+    Enter your industry. AI scans for trending topics, emerging conversations,
+    and content opportunities — with ready-to-use hooks and channel recommendations.
+    """)
+
+    col_ind, col_ctx = st.columns([1, 1])
+    with col_ind:
+        trend_industry = st.text_input(
+            "Your industry/niche:",
+            placeholder="e.g., B2B SaaS, Healthcare, Manufacturing, Fintech, E-commerce...",
+            key="trend_industry"
+        )
+    with col_ctx:
+        trend_context = st.text_input(
+            "Your company (optional):",
+            placeholder="e.g., Connected worker platform for factories",
+            key="trend_context"
+        )
+
+    if st.button("🔍 Scan for Trends", type="primary", use_container_width=True, key="scan_trends"):
+        if not trend_industry.strip():
+            st.warning("Enter your industry to scan for trends.")
+        elif not has_api_key():
+            st.warning("API key required.")
+        else:
+            client = get_client()
+            if client:
+                st.session_state.setdefault("run_timestamps", []).append(time.time())
+
+                with st.status("🔍 Scanning trending topics...", expanded=True) as status:
+                    st.write("Analyzing industry conversations...")
+                    st.write("Identifying content opportunities...")
+                    trends_data, err = scan_trends(client, trend_industry, trend_context or context)
+
+                    if err:
+                        status.update(label="❌ Error", state="error")
+                        st.error(err)
+                    elif trends_data:
+                        status.update(label=f"✅ Found {len(trends_data.get('trends', []))} trending topics", state="complete")
+
+                if trends_data:
+                    st.markdown("---")
+
+                    for i, trend in enumerate(trends_data.get("trends", []), 1):
+                        urgency = trend.get("urgency", "medium")
+                        urgency_colors = {"high": "#ef4444", "medium": "#f59e0b", "low": "#22c55e"}
+                        u_color = urgency_colors.get(urgency, "#f59e0b")
+
+                        channels_str = " · ".join(trend.get("best_channels", []))
+                        angles_html = "<br>".join([f"→ {a}" for a in trend.get("content_angles", [])])
+
+                        st.markdown(f"""
+<div class="content-card" style="border-left:4px solid {u_color};">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="card-label">#{i} · {trend.get('title', 'Trend')}</div>
+        <span style="background:{u_color}; color:#fff; padding:2px 8px; border-radius:10px; font-size:0.7rem; text-transform:uppercase;">{urgency}</span>
+    </div>
+    <div style="font-size:0.9rem; color:#374151; margin-bottom:8px;">{trend.get('summary', '')}</div>
+    <div style="font-size:0.85rem; color:#6366f1; margin-bottom:8px;"><strong>Why now:</strong> {trend.get('why_now', '')}</div>
+    <div style="font-size:0.85rem; margin-bottom:8px;"><strong>Content angles:</strong><br>{angles_html}</div>
+    <div style="font-size:0.8rem; color:#64748b;"><strong>Best channels:</strong> {channels_str}</div>
+</div>""", unsafe_allow_html=True)
+
+                        # Ready-to-use hook
+                        hook = trend.get("sample_hook", "")
+                        if hook:
+                            with st.expander(f"📋 Ready-to-use hook for #{i}"):
+                                st.code(hook, language=None)
+
+                    st.info("💡 **Tip:** Copy a trend summary and paste it into the Pipeline tab to generate full content across 4 channels.")
+
+
+# ─── TAB 4: Data → Content ────────────────────────────────────
+with tab_data:
+    st.markdown("""
+    ### 📊 Data → Content — Turn Numbers into Narratives
+
+    Upload a CSV, spreadsheet export, or paste raw data. AI extracts the key insights
+    and turns them into content angles — with headlines and audience suggestions.
+    """)
+
+    data_input_mode = st.radio(
+        "Data source:",
+        ["📋 Paste data", "📄 Upload CSV/file"],
+        horizontal=True,
+        key="data_input_mode"
+    )
+
+    data_text = ""
+    if data_input_mode == "📄 Upload CSV/file":
+        data_file = st.file_uploader("Upload data file:", type=["csv", "txt", "md", "xlsx"], key="data_file")
+        if data_file:
+            if data_file.name.endswith(".csv") or data_file.name.endswith(".txt") or data_file.name.endswith(".md"):
+                data_text = data_file.read().decode("utf-8", errors="ignore")
+                # Truncate
+                lines = data_text.split("\n")
+                if len(lines) > 150:
+                    data_text = "\n".join(lines[:150]) + f"\n[...truncated, {len(lines)} total rows]"
+                st.success(f"Loaded {len(lines)} rows")
+            else:
+                st.warning("For Excel files (.xlsx), export as CSV first for best results.")
+    else:
+        data_text = st.text_area(
+            "Paste your data:",
+            placeholder="Paste CSV data, survey results, metrics, KPIs, or any structured data...\n\ne.g.:\nMonth,Revenue,Churn Rate,NPS\nJan,120000,3.2%,45\nFeb,135000,2.8%,52\nMar,128000,3.5%,41",
+            height=200,
+            key="data_paste"
+        )
+
+    if data_text:
+        st.caption(f"Data preview: {len(data_text.split(chr(10)))} rows loaded")
+
+    col_analyze, col_generate = st.columns(2)
+
+    with col_analyze:
+        if st.button("🔍 Extract Insights", type="primary", use_container_width=True, key="extract_insights"):
+            if not data_text.strip():
+                st.warning("Add some data first.")
+            elif not has_api_key():
+                st.warning("API key required.")
+            else:
+                client = get_client()
+                if client:
+                    st.session_state.setdefault("run_timestamps", []).append(time.time())
+
+                    with st.spinner("📊 Analyzing data patterns..."):
+                        insights, err = analyze_data_for_content(client, data_text, context)
+
+                    if err:
+                        st.error(err)
+                    elif insights:
+                        st.session_state["data_insights"] = insights
+                        st.markdown("---")
+                        st.markdown(f"**Dataset:** {insights.get('data_summary', 'Analyzed')}")
+                        st.markdown(f"**Overall narrative:** {insights.get('overall_narrative', '')}")
+                        st.markdown("---")
+
+                        for j, ins in enumerate(insights.get("insights", []), 1):
+                            st.markdown(f"""
+<div class="content-card">
+    <div class="card-label">Insight #{j}: {ins.get('insight', '')}</div>
+    <div style="font-size:0.85rem; margin-bottom:6px;"><strong>📊 Evidence:</strong> {ins.get('data_evidence', '')}</div>
+    <div style="font-size:0.85rem; margin-bottom:6px;"><strong>📝 Story angle:</strong> {ins.get('story_angle', '')}</div>
+    <div style="font-size:0.85rem; margin-bottom:6px;"><strong>💡 Headline:</strong> <em>{ins.get('headline_suggestion', '')}</em></div>
+    <div style="font-size:0.8rem; color:#64748b;"><strong>🎯 Audience:</strong> {ins.get('target_audience', '')}</div>
+</div>""", unsafe_allow_html=True)
+
+                        st.info("💡 **Next step:** Copy an insight headline and paste it into the Pipeline tab to generate full content.")
+
+    with col_generate:
+        if st.button("⚡ Insight → Full Content", use_container_width=True, key="insight_to_content",
+                     help="Takes the top insight and runs it through the 4-channel pipeline"):
+            insights = st.session_state.get("data_insights")
+            if insights and insights.get("insights"):
+                top = insights["insights"][0]
+                st.session_state["prefill_insight"] = f"{top.get('headline_suggestion', '')}. {top.get('insight', '')} Evidence: {top.get('data_evidence', '')}. {top.get('story_angle', '')}"
+                st.info(f"✅ Top insight loaded! Switch to the **Pipeline** tab to generate content.")
+            else:
+                st.warning("Extract insights first (click the button on the left).")
+
+
+# ─── TAB 5: Industry Showcase ─────────────────────────────────
 with tab_showcase:
     st.markdown("""
     ### 📦 See It in Action
@@ -2239,58 +2715,61 @@ with tab_architecture:
 
     st.markdown("---")
 
-    st.markdown("#### Prompt-and-Pray vs. Pipeline")
+    st.markdown("#### Prompt-and-Pray vs. ContentEngine")
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("""
-        **❌ Prompt-and-Pray**
-        - Open ChatGPT
-        - "Write me a LinkedIn post"
-        - Get generic output
-        - Manually rewrite for other channels
-        - No brand voice consistency
-        - No quality feedback loop
+        **❌ Typical AI Content**
+        - "What should I write?" → guess
+        - Paste into ChatGPT → generic output
+        - Manually rewrite per channel
+        - No brand voice
+        - No SEO analysis
+        - No data-driven insights
+        - No distribution strategy
         """)
     with col2:
         st.markdown("""
-        **✅ ContentEngine Pipeline**
-        - Multi-source input (text, URL, PDF, DOCX)
-        - Brand Voice Cloning from samples
-        - SEO Readiness analysis (zero API cost)
-        - Format-specific prompt per channel
-        - Auto quality scoring (5 dimensions)
+        **✅ ContentEngine**
+        - Trend Radar finds topics for you
+        - Data → Content extracts insights from CSV
+        - 4 channels generated simultaneously
+        - Brand Voice Cloning matches anyone
+        - SEO Readiness built in (free)
         - Repurpose: 1 piece → 10 outputs
+        - Content Chain plans distribution
+        - Visual carousel builder
         """)
 
     st.markdown("---")
 
-    st.markdown("#### Technical Stack")
+    st.markdown("#### Full Feature Map")
     st.markdown("""
-    | Layer | Detail |
-    |---|---|
-    | **Model** | Claude Sonnet 4 (`claude-sonnet-4-20250514`) |
-    | **Prompt Architecture** | 5-layer: System + Format + Context + Voice + Tone/Audience |
-    | **Brand Voice** | Extract voice DNA from writing samples → inject into all generations |
-    | **SEO Analysis** | Flesch-Kincaid readability, keyword extraction, heading structure, meta description — pure Python, zero cost |
-    | **Quality Scoring** | 5-dimension scoring (hook, readability, specificity, channel fit, CTA) |
-    | **AI Visuals** | Blog headers, LinkedIn visuals, quote cards via Pollinations.ai — free |
-    | **Input Sources** | Text, URL (BeautifulSoup), PDF (PyPDF2), DOCX (python-docx), CSV |
-    | **Anti-fluff System** | Rules at system prompt level — no buzzwords without data |
-    | **Deployment** | Streamlit Cloud — zero-config, shareable link |
+    | Feature | What It Does | Cost |
+    |---|---|---|
+    | **🔧 Pipeline** | Text/URL/PDF/DOCX → 4 channel content | API |
+    | **🔄 Repurpose** | 1 article → 10 pieces (3 LinkedIn, thread, blog, email, Reddit, carousel, newsletter, quotes) | API |
+    | **🔍 Trend Radar** | Scans trending topics → "write about this" with hooks | API |
+    | **📊 Data → Content** | CSV/data → insight extraction → content angles | API |
+    | **🧬 Brand Voice** | Upload samples → extract voice DNA → match in all outputs | API |
+    | **📊 SEO Analysis** | Flesch-Kincaid, keywords, headings, meta description | **$0** |
+    | **🎠 Carousel Builder** | Blog → 8 visual slides with progress bars | API |
+    | **🔗 Content Chain** | Cross-linking + distribution strategy + timing | API |
+    | **🖼️ AI Visuals** | Blog headers, LinkedIn visuals, quote cards (Pollinations.ai) | **$0** |
+    | **📈 Quality Scoring** | 5-dimension scoring per output | API |
+    | **📦 Export** | Markdown bundle, content calendar, plain text, PNG images | **$0** |
+    | **🎨 Tone/Audience** | 5 tone × 5 audience presets | — |
     """)
 
     st.markdown("---")
 
-    st.markdown("#### Scaling Roadmap")
+    st.markdown("#### Next on the Roadmap")
     st.markdown("""
-    **v3 — Monitoring Layer** → RSS feeds from industry news, competitor blog monitors,
-    Reddit/HN keyword alerts → auto-surface insights for human review
+    **Workflow Integration** → HubSpot API (email sequences), Buffer (social scheduling),
+    Slack notifications (content ready for review)
 
-    **v4 — Workflow Integration** → HubSpot API (email sequences), Buffer (social scheduling),
-    Slack notifications (content ready for review), content calendar auto-population
-
-    **v5 — Performance Loop** → Track insight → content → engagement, feed performance data
-    back into prompt optimization, A/B test system prompts based on channel metrics
+    **Performance Loop** → Track insight → content → engagement, feed data
+    back into prompt optimization
     """)
 
     st.markdown("---")
