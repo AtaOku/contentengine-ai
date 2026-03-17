@@ -1062,9 +1062,10 @@ def render_carousel_slide(slide, seed=1):
 def generate_image_url(prompt, width=1200, height=630, seed=None):
     """Generate a free AI image URL via Pollinations.ai. No API key needed."""
     import urllib.parse
-    clean_prompt = prompt.strip()[:500]  # Limit prompt length
+    # Keep prompts SHORT — Pollinations fails on long/complex prompts
+    clean_prompt = prompt.strip()[:200]
     encoded = urllib.parse.quote(clean_prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&nologo=true"
+    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&nologo=true&model=flux"
     if seed:
         url += f"&seed={seed}"
     return url
@@ -1072,16 +1073,14 @@ def generate_image_url(prompt, width=1200, height=630, seed=None):
 
 def get_blog_header_prompt(blog_content):
     """Extract a visual prompt from blog content for header image."""
-    # Get the headline
     lines = blog_content.strip().split("\n")
-    headline = lines[0].lstrip("# ").strip() if lines else "Business content"
-    # Create a visual prompt
-    return f"Professional minimalist blog header image for article titled '{headline}', abstract geometric shapes, corporate blue and indigo gradient, clean modern design, no text, editorial style, 4k"
+    headline = lines[0].lstrip("# ").strip()[:60] if lines else "Business"
+    return f"minimalist blog header, abstract shapes, blue indigo gradient, modern, no text, {headline}"
 
 
 def get_quote_card_prompt(quote_text):
     """Generate a visual prompt for a quote card background."""
-    return f"Elegant minimalist background for quote card, subtle gradient, professional corporate style, soft bokeh, dark navy and gold accent, no text, abstract, high quality"
+    return "elegant dark gradient background, navy gold accent, minimal, no text, abstract bokeh"
 
 
 def render_image_with_fallback(url, caption="", width=None):
@@ -1098,8 +1097,12 @@ def show_image_with_download(img_url, caption, key_suffix, filename="generated_i
     """Show AI image with download link. Client-side rendering — no server fetch needed."""
     st.markdown(f"""
 <div style="border-radius:10px; overflow:hidden; margin:0.5rem 0; border:1px solid #e5e7eb;">
-    <img src="{img_url}" style="width:100%; display:block;" alt="{caption}" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:2rem; text-align:center; color:#94a3b8;\\'>🖼️ Image loading... <a href=\\'{img_url}\\' target=\\'_blank\\'>Open directly</a></div>';">
-    <div style="padding:8px 12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
+    <img src="{img_url}" style="width:100%; display:block; min-height:100px; background:#f1f5f9;" alt="{caption}" loading="lazy"
+         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div style="display:none; padding:1.5rem; background:#f8fafc; align-items:center; justify-content:center; gap:8px; color:#94a3b8; font-size:0.85rem;">
+        🖼️ Image generating... <a href="{img_url}" target="_blank" style="color:#6366f1;">Open directly</a>
+    </div>
+    <div style="padding:8px 12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; border-top:1px solid #e5e7eb;">
         <span style="color:#64748b;">{caption}</span>
         <a href="{img_url}" download="{filename}" target="_blank" style="color:#6366f1; text-decoration:none; font-weight:600;">⬇️ Download</a>
     </div>
@@ -2118,7 +2121,7 @@ with tab_pipeline:
 
                     # AI-generated visual for LinkedIn
                     if enable_images and ch == "linkedin":
-                        li_prompt = f"Professional LinkedIn post visual, abstract data visualization, corporate blue gradient, modern minimalist infographic style, no text, clean, editorial, 4k"
+                        li_prompt = f"abstract data visualization, blue gradient, minimal infographic, no text"
                         li_url = generate_image_url(li_prompt, width=1200, height=627, seed=77)
                         show_image_with_download(li_url, "🖼️ AI-generated post visual (free via Pollinations.ai)", "pipe_li", "linkedin_visual.png")
 
@@ -2395,7 +2398,7 @@ with tab_repurpose:
                             elif "quote" in fmt.lower():
                                 show_image_with_download(generate_image_url(get_quote_card_prompt(content), 1080, 1080, seed=i*20), "🖼️ Quote card background", f"rep_quote_{i}", f"quote_card_{i}.png")
                             elif "carousel" in fmt.lower():
-                                show_image_with_download(generate_image_url("Professional carousel slide background, clean gradient, modern geometric shapes, corporate style, no text, abstract, indigo and white, 4k", 1080, 1080, seed=i*30), "🖼️ Carousel slide background", f"rep_carousel_{i}", f"carousel_slide_{i}.png")
+                                show_image_with_download(generate_image_url("geometric shapes, indigo white gradient, clean slide background, no text", 1080, 1080, seed=i*30), "🖼️ Carousel slide background", f"rep_carousel_{i}", f"carousel_slide_{i}.png")
 
                         # Use appropriate mockup for known formats
                         if "linkedin" in fmt.lower():
@@ -2655,7 +2658,7 @@ with tab_showcase:
             show_image_with_download(generate_image_url(img_prompt, 1200, 630, seed=demo_seed), "🖼️ AI-generated blog header", f"sc_blog_{demo_seed}", "blog_header.png")
         elif enable_images and key == "linkedin":
             demo_seed = (hash(selected_demo) % 1000) + 100
-            li_prompt = f"Professional thought leadership visual, abstract corporate infographic, modern gradient, editorial style, no text, 4k"
+            li_prompt = f"abstract corporate infographic, modern gradient, editorial, no text"
             show_image_with_download(generate_image_url(li_prompt, 1200, 627, seed=demo_seed), "🖼️ AI-generated post visual", f"sc_li_{demo_seed}", "linkedin_visual.png")
 
         renderer = MOCKUP_RENDERERS.get(key)
