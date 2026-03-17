@@ -354,6 +354,45 @@ AUDIENCE_OPTIONS = {
     "🌍 General / Mixed": "Broad audience. Balance accessibility with depth. Define jargon when used.",
 }
 
+VOICE_EXTRACT_PROMPT = """Analyze these writing samples and extract a Brand Voice Profile. 
+Study the patterns carefully across ALL samples and return a JSON object:
+
+{{
+    "voice_summary": "One-paragraph description of this brand's writing voice",
+    "sentence_style": "Short/Medium/Long. How long are typical sentences? Any signature structures?",
+    "hook_pattern": "How do they typically open posts/paragraphs? Question? Bold claim? Data? Story?",
+    "vocabulary_level": "Technical jargon level: Low/Medium/High. Key recurring terms or phrases.",
+    "signature_phrases": ["List of 3-5 recurring phrases, transitions, or verbal tics"],
+    "tone_markers": "Confident/Humble/Provocative/Neutral? First person or third? Formal or casual?",
+    "structural_pattern": "How do they structure content? Short paragraphs? Lists? Stories then data?",
+    "cta_style": "How do they end? Question? Challenge? Invitation? Summary?",
+    "what_they_avoid": "What do they clearly NOT do? (e.g., never use emojis, never use jargon, etc.)",
+    "mimicry_instructions": "Specific, actionable instructions for an AI to write in this voice. Be very precise."
+}}
+
+Writing samples:
+{samples}
+
+Return ONLY valid JSON, no markdown formatting, no backticks."""
+
+SCORING_PROMPT = """Score this content on 5 dimensions. Return a JSON object:
+
+{{
+    "hook_strength": {{"score": 1-10, "reason": "Why this score"}},
+    "readability": {{"score": 1-10, "reason": "Why this score"}},
+    "specificity": {{"score": 1-10, "reason": "Does it use concrete examples/data vs vague claims?"}},
+    "channel_fit": {{"score": 1-10, "reason": "How well does it match the channel's native style?"}},
+    "cta_clarity": {{"score": 1-10, "reason": "Is the call-to-action clear and compelling?"}},
+    "overall": 1-10,
+    "one_line_improvement": "Single most impactful edit to improve this content"
+}}
+
+Channel: {channel}
+Content:
+{content}
+
+Return ONLY valid JSON, no markdown formatting, no backticks."""
+
 
 def get_client():
     api_key = st.session_state.get("api_key", "")
@@ -361,7 +400,7 @@ def get_client():
         return None
     return anthropic.Anthropic(api_key=api_key)
 
-def generate_content(client, format_type, insight, context, tone_desc="", audience_desc=""):
+def generate_content(client, format_type, insight, context, tone_desc="", audience_desc="", voice_profile=None):
     prompt = FORMAT_PROMPTS[format_type].format(insight=insight, context=context)
 
     # Inject tone and audience into prompt
@@ -370,6 +409,26 @@ def generate_content(client, format_type, insight, context, tone_desc="", audien
         modifiers += f"\n\nTONE INSTRUCTION: {tone_desc}"
     if audience_desc:
         modifiers += f"\nAUDIENCE: {audience_desc}"
+
+    # Inject brand voice profile
+    if voice_profile:
+        voice_instructions = voice_profile.get("mimicry_instructions", "")
+        voice_summary = voice_profile.get("voice_summary", "")
+        sig_phrases = ", ".join(voice_profile.get("signature_phrases", []))
+        avoid = voice_profile.get("what_they_avoid", "")
+
+        modifiers += f"""
+
+BRAND VOICE (CRITICAL — match this voice exactly):
+{voice_summary}
+
+Mimicry instructions: {voice_instructions}
+Hook pattern: {voice_profile.get('hook_pattern', '')}
+Sentence style: {voice_profile.get('sentence_style', '')}
+Structural pattern: {voice_profile.get('structural_pattern', '')}
+Signature phrases to use naturally: {sig_phrases}
+CTA style: {voice_profile.get('cta_style', '')}
+Things to AVOID: {avoid}"""
 
     if modifiers:
         prompt = prompt + modifiers
@@ -384,6 +443,46 @@ def generate_content(client, format_type, insight, context, tone_desc="", audien
         return response.content[0].text
     except Exception as e:
         return f"Error: {str(e)}"
+
+
+def extract_brand_voice(client, samples_text):
+    """Extract brand voice profile from writing samples."""
+    prompt = VOICE_EXTRACT_PROMPT.format(samples=samples_text)
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1200,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        return json.loads(text.strip()), None
+    except json.JSONDecodeError:
+        return None, "Failed to parse voice profile. Try with different samples."
+    except Exception as e:
+        return None, f"Error: {str(e)[:100]}"
+
+
+def score_content(client, content, channel):
+    """Score generated content on quality dimensions."""
+    prompt = SCORING_PROMPT.format(content=content, channel=channel)
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        return json.loads(text.strip())
+    except:
+        return None
 
 def analyze_insight(client, insight, context):
     prompt = ANALYSIS_PROMPT.format(insight=insight, context=context)
@@ -653,6 +752,67 @@ with st.sidebar:
 
     st.divider()
 
+    st.markdown("### 🎙️ Brand Voice")
+    voice_enabled = st.checkbox("Enable Brand Voice Cloning", value=False,
+        help="Upload writing samples to clone a specific brand voice across all outputs.")
+
+    if voice_enabled:
+        voice_input_method = st.radio("Voice samples via:", ["Paste text", "Upload file"], horizontal=True, key="voice_method")
+
+        if voice_input_method == "Paste text":
+            voice_samples = st.text_area(
+                "Paste 3-5 writing samples (posts, emails, blog excerpts)",
+                placeholder="Paste the CEO's LinkedIn posts, company blog excerpts, or any writing samples that represent the target voice...",
+                height=150,
+                key="voice_samples_text"
+            )
+        else:
+            voice_file = st.file_uploader("Upload samples", type=["txt", "md", "pdf", "docx"], key="voice_file")
+            voice_samples = ""
+            if voice_file:
+                file_content, err = extract_file_content(voice_file)
+                if file_content:
+                    voice_samples = file_content
+                    st.success(f"Extracted {len(file_content.split())} words")
+                elif err:
+                    st.error(err)
+
+        if voice_samples and st.button("🧬 Extract Voice DNA", key="extract_voice"):
+            client = get_client()
+            if client:
+                with st.spinner("🧬 Analyzing writing patterns..."):
+                    profile, err = extract_brand_voice(client, voice_samples)
+                if profile:
+                    st.session_state["voice_profile"] = profile
+                    st.success("Brand voice profile extracted!")
+                    with st.expander("View Voice Profile"):
+                        st.markdown(f"**Summary:** {profile.get('voice_summary', 'N/A')}")
+                        st.markdown(f"**Hook Pattern:** {profile.get('hook_pattern', 'N/A')}")
+                        st.markdown(f"**Sentence Style:** {profile.get('sentence_style', 'N/A')}")
+                        st.markdown(f"**Tone:** {profile.get('tone_markers', 'N/A')}")
+                        phrases = profile.get('signature_phrases', [])
+                        if phrases:
+                            st.markdown(f"**Signature Phrases:** {', '.join(phrases)}")
+                        st.markdown(f"**Avoids:** {profile.get('what_they_avoid', 'N/A')}")
+                elif err:
+                    st.error(err)
+            else:
+                st.warning("Enter API key first.")
+
+        if "voice_profile" in st.session_state:
+            st.markdown(f"✅ **Voice loaded:** {st.session_state['voice_profile'].get('tone_markers', 'Custom')[:40]}")
+            if st.button("🗑️ Clear Voice Profile", key="clear_voice"):
+                del st.session_state["voice_profile"]
+                st.rerun()
+
+    st.divider()
+
+    st.markdown("### 📈 Quality Scoring")
+    enable_scoring = st.checkbox("Score generated content", value=False,
+        help="After generation, each output gets a quality score (hook, readability, specificity, channel fit, CTA).")
+
+    st.divider()
+
     st.markdown(
         "<div style='font-size:0.75rem; color:#94a3b8; font-family: JetBrains Mono, monospace;'>"
         "Built by Ata Okuzcuoglu<br>"
@@ -674,7 +834,7 @@ st.markdown("""
     <div class="hero-subtitle">
         Raw insight in. Publish-ready content out. Four channels. Under 60 seconds.
     </div>
-    <div class="hero-badge">PIPELINE v1.1 — Text · URL · PDF · DOCX · Tone & Audience Controls</div>
+    <div class="hero-badge">PIPELINE v2.0 — Brand Voice Cloning · Quality Scoring · Multi-Source Input</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -842,7 +1002,8 @@ with tab_pipeline:
                 progress = st.progress(0)
                 for i, ch in enumerate(channels):
                     with st.spinner(f"Generating {channel_labels[ch]}..."):
-                        results[ch] = generate_content(client, ch, insight_text, context, tone_desc, audience_desc)
+                        voice_profile = st.session_state.get("voice_profile", None) if voice_enabled else None
+                        results[ch] = generate_content(client, ch, insight_text, context, tone_desc, audience_desc, voice_profile)
                     progress.progress((i + 1) / len(channels))
 
                 elapsed = time.time() - start_time
@@ -874,13 +1035,46 @@ with tab_pipeline:
                         key=f"out_{ch}",
                         label_visibility="collapsed"
                     )
-                    st.download_button(
-                        f"📋 Download {ch}",
-                        results[ch],
-                        file_name=f"contentengine_{ch}_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-                        mime="text/plain",
-                        key=f"dl_{ch}"
-                    )
+                    col_dl, col_score = st.columns([1, 3])
+                    with col_dl:
+                        st.download_button(
+                            f"📋 Download {ch}",
+                            results[ch],
+                            file_name=f"contentengine_{ch}_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                            mime="text/plain",
+                            key=f"dl_{ch}"
+                        )
+
+                # Quality scoring (optional)
+                if enable_scoring:
+                    st.markdown("---")
+                    st.markdown("### 📈 Content Quality Scores")
+                    score_progress = st.progress(0)
+                    all_scores = {}
+                    for i, ch in enumerate(channels):
+                        with st.spinner(f"Scoring {channel_labels[ch]}..."):
+                            all_scores[ch] = score_content(client, results[ch], ch)
+                        score_progress.progress((i + 1) / len(channels))
+
+                    for ch in channels:
+                        scores = all_scores.get(ch)
+                        if scores:
+                            overall = scores.get("overall", "?")
+                            # Color based on score
+                            color = "#22c55e" if overall >= 7 else "#f59e0b" if overall >= 5 else "#ef4444"
+
+                            st.markdown(f"""
+<div class="content-card" style="border-left: 4px solid {color};">
+    <div class="card-label">{channel_labels[ch]} — Score: {overall}/10</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+        <span>🪝 Hook: <strong>{scores.get('hook_strength',{}).get('score','?')}</strong></span>
+        <span>📖 Read: <strong>{scores.get('readability',{}).get('score','?')}</strong></span>
+        <span>🎯 Specific: <strong>{scores.get('specificity',{}).get('score','?')}</strong></span>
+        <span>📱 Fit: <strong>{scores.get('channel_fit',{}).get('score','?')}</strong></span>
+        <span>👆 CTA: <strong>{scores.get('cta_clarity',{}).get('score','?')}</strong></span>
+    </div>
+    <div style="font-size:0.9rem; color:#6366f1;"><strong>Top improvement:</strong> {scores.get('one_line_improvement','N/A')}</div>
+</div>""", unsafe_allow_html=True)
 
 
 # ─── TAB 2: Generic Demo ──────────────────────────────────────
@@ -989,18 +1183,18 @@ with tab_architecture:
         - "Write me a LinkedIn post"
         - Get generic output
         - Manually rewrite for other channels
-        - No domain expertise baked in
-        - Inconsistent across channels
+        - No brand voice consistency
+        - No quality feedback loop
         """)
     with col2:
         st.markdown("""
         **✅ ContentEngine Pipeline**
-        - Structured input → analysis → generation
-        - Domain-specific system prompt (swappable)
+        - Multi-source input (text, URL, PDF, DOCX)
+        - Brand Voice Cloning from samples
+        - Tone + Audience controls per run
         - Format-specific prompt per channel
-        - Anti-fluff rules at system level
+        - Auto quality scoring (5 dimensions)
         - One insight → consistent narrative × 4
-        - Channel-native tone automatically
         """)
 
     st.markdown("---")
@@ -1010,9 +1204,11 @@ with tab_architecture:
     | Layer | Detail |
     |---|---|
     | **Model** | Claude Sonnet 4 (`claude-sonnet-4-20250514`) |
-    | **Prompt Architecture** | System prompt (domain) + Format prompts (channel) + Context injection (company) |
-    | **Analysis Layer** | JSON-structured insight extraction before content generation |
-    | **Anti-fluff System** | Rules at system prompt level — no buzzwords without data, domain-specific perspective required |
+    | **Prompt Architecture** | 5-layer: System + Format + Context + Voice + Tone/Audience |
+    | **Brand Voice** | Extract voice DNA from writing samples → inject into all generations |
+    | **Quality Scoring** | 5-dimension scoring (hook, readability, specificity, channel fit, CTA) |
+    | **Input Sources** | Text, URL (BeautifulSoup), PDF (PyPDF2), DOCX (python-docx), CSV |
+    | **Anti-fluff System** | Rules at system prompt level — no buzzwords without data |
     | **Extensibility** | New channel = new format prompt + 15 minutes of work |
     | **Deployment** | Streamlit Cloud — zero-config, shareable link |
     """)
@@ -1021,13 +1217,13 @@ with tab_architecture:
 
     st.markdown("#### Scaling Roadmap")
     st.markdown("""
-    **v2 — Monitoring Layer** → RSS feeds from industry news, competitor blog monitors,
+    **v3 — Monitoring Layer** → RSS feeds from industry news, competitor blog monitors,
     Reddit/HN keyword alerts → auto-surface insights for human review
 
-    **v3 — Workflow Integration** → HubSpot API (email sequences), Buffer (social scheduling),
+    **v4 — Workflow Integration** → HubSpot API (email sequences), Buffer (social scheduling),
     Slack notifications (content ready for review), content calendar auto-population
 
-    **v4 — Performance Loop** → Track insight → content → engagement, feed performance data
+    **v5 — Performance Loop** → Track insight → content → engagement, feed performance data
     back into prompt optimization, A/B test system prompts based on channel metrics
     """)
 
