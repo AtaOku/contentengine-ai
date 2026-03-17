@@ -835,106 +835,222 @@ One automotive supplier cut new worker onboarding from 12 weeks to 3 using real-
 CTA: See how leading manufacturers are solving the skills gap → [link]"""
 }
 
-# ── Pre-generated GENERIC content (SaaS product launch) ─────
+# ── Multi-Industry Showcase Demos ─────────────────────────────
 
-PREGENERATED_GENERIC = {
-    "insight_used": "A recent analysis shows that employee-generated content on LinkedIn gets 8x more engagement than brand page posts. Meanwhile, companies are spending $50-100K/month on content agencies producing generic thought leadership that nobody reads. The most authentic, high-performing content is coming from people who actually do the work — engineers, PMs, customer success — not the marketing department.",
+SHOWCASE_DEMOS = {
+    "🍎 Tech — Why Apple's AI Strategy Is Failing": {
+        "description": "Apple Intelligence launched with hype but delivers hallucinated notifications, basic summaries, and no real Siri upgrade. Meanwhile, Google and OpenAI ship weekly. What went wrong?",
+        "linkedin": """Apple spent $100 billion on R&D last year.
 
-    "linkedin": """Your marketing team is not your best marketing channel.
+Their AI summarized a news headline so badly it became international news.
 
-Your engineers are.
+Meanwhile, Google shipped Gemini into every product in 6 months. OpenAI went from GPT-4 to real-time voice to video generation in 18 months. Meta open-sourced Llama and built an AI ecosystem overnight.
 
-Here's a stat that should make every CMO uncomfortable: employee posts on LinkedIn get 8x more engagement than brand page content. Eight times.
+Apple launched "Apple Intelligence" and gave us... notification summaries that hallucinate.
 
-Why? Because people trust people. Not logos.
+Here's what went wrong:
 
-I watched a SaaS company spend $80K/month on a content agency. Polished blog posts. Perfectly branded carousels. Professional photography.
+Apple's entire business model is built on control. Closed ecosystem. Curated experience. Privacy as religion. These are genuine strengths for hardware and OS design.
 
-Engagement? Crickets.
+But they're fatal weaknesses for AI.
 
-Then their VP of Engineering started posting raw, unpolished takes about debugging production issues at 2 AM. No graphics. No hashtags. Just honest stories from the trenches.
+AI development requires rapid iteration. Ship fast, break things, learn from millions of users, ship again. Google and OpenAI deploy model updates weekly. Apple ships annually.
 
-That one person generated more pipeline than the entire content budget.
+AI development requires data. Lots of it. Apple's privacy stance — which customers love — means they can't train on user data the way competitors do. Noble? Yes. Competitive? No.
 
-The uncomfortable truth: your best content creators aren't in marketing. They're in customer success, hearing the real objections. They're in product, making the hard tradeoff decisions. They're in engineering, solving problems that your customers actually care about.
+AI development requires openness. The biggest breakthroughs are coming from open research, open models, open collaboration. Apple's secrecy culture is fundamentally incompatible with how the AI ecosystem evolves.
 
-The companies winning at content in 2026 aren't hiring more writers. They're giving their subject matter experts a microphone and getting out of the way.
+The result: Apple is 2-3 years behind on the technology that will define the next decade of computing.
 
-The CMO's job isn't to create content anymore. It's to build systems that help 50 employees create content.
+This isn't a temporary setback. It's a structural mismatch between Apple's DNA and what AI demands.
 
-Does your company encourage non-marketing employees to post? What's worked?
+The question isn't whether Apple will catch up. It's whether the closed-ecosystem model survives the AI era at all.
 
-#ContentMarketing #B2BMarketing #EmployeeAdvocacy #LinkedInStrategy #ContentStrategy""",
+What's your take — can Apple adapt, or is this a fundamental disadvantage?
 
-    "blog": """# Your Best Content Creators Don't Work in Marketing
+#Apple #AI #BigTech #ArtificialIntelligence #TechStrategy""",
 
-**The $80K/month content strategy that got outperformed by one engineer on LinkedIn.**
+        "blog": """# Apple's $100 Billion AI Problem: Why Control Culture Can't Win the AI Race
 
-Here's something most marketing leaders know but won't say out loud: the content their team produces is not what's actually driving pipeline. The polished blog posts, the branded carousels, the professionally edited videos — they check boxes, but they don't move needles.
+**The company that perfected closed ecosystems is losing to open ones.**
 
-What does? Unfiltered, authentic content from people who actually do the work.
+Apple Intelligence was supposed to be the moment Apple proved it could compete in AI. Instead, it became a case study in why the world's most valuable company might be structurally incapable of winning the AI race.
 
-## The 8x Engagement Gap
+The hallucinated notification summaries were embarrassing. The basic text tools were underwhelming. The "upgraded" Siri remained largely unchanged. And developers who expected an AI platform got a limited set of APIs that felt years behind Google and OpenAI.
 
-Employee-generated content on LinkedIn receives 8x more engagement than corporate brand posts. This isn't a marginal difference — it's an order of magnitude. And it makes intuitive sense: people scroll past logos, but they stop for humans.
+## The Structural Mismatch
 
-A mid-stage SaaS company I spoke with learned this the expensive way. They were spending $80,000 per month on a premium content agency. Beautiful output. On-brand everything. Engagement rates? Below industry average.
+Apple's DNA is control. Closed hardware. Curated App Store. Vertically integrated experiences. This philosophy built the most profitable technology company in history.
 
-Then something unplanned happened. Their VP of Engineering started posting about the real challenges of building their product. Debugging stories. Architecture decisions. The messy, honest reality of shipping software. No design team. No approval process. Just authentic expertise.
+But AI doesn't reward control. It rewards speed, data, and openness — three things Apple's culture actively resists.
 
-Within three months, that single person's LinkedIn presence was generating more inbound leads than the entire content budget.
+Google deploys model improvements weekly. OpenAI pushes updates to millions of users and iterates in real-time. Meta open-sourced Llama and created an entire ecosystem of developers improving its models for free.
 
-## Why This Happens
+Apple ships major updates annually. In AI, that's a geological timescale.
 
-Brand content fails because it's optimized for brand consistency, not for human connection. It goes through six rounds of approval until every edge is sanded off. The result is content that offends nobody and interests nobody.
+## The Data Paradox
 
-Employee content works because it comes from a place of genuine expertise and authentic experience. A customer success manager describing a difficult onboarding call is more compelling than a case study that took three months to approve. An engineer explaining why they chose one database over another teaches more than a whitepaper ever could.
+Apple's privacy commitment is genuine and customers love it. But it creates a fundamental training data disadvantage. Google processes billions of search queries, Gmail messages, and YouTube interactions daily. Apple deliberately doesn't access equivalent user data.
 
-## The New Content Playbook
+## The Open vs. Closed Dilemma
 
-The companies winning at content in 2026 aren't scaling their content teams. They're building internal systems that make it easy for subject matter experts across the company to share what they know.
+The most significant AI breakthroughs of the past two years have come from open research and open models. The community that advances AI fastest is inherently collaborative and transparent.
 
-This means providing simple frameworks and templates, offering lightweight coaching on storytelling, removing approval bottlenecks for personal posts, and celebrating employees who share publicly.
+Apple's secrecy culture — the locked-down campuses, the compartmentalized teams, the surprise-driven product launches — is the opposite of how AI innovation happens.
 
-The CMO's job is evolving from "create great content" to "build systems that enable 50 people to create great content."
+## What This Means
 
-**The takeaway:** If your content strategy relies entirely on your marketing team, you're leaving your most powerful channel untapped. The people closest to your customers and your product are your best storytellers. Give them the tools and get out of the way.""",
+Apple isn't going away. They have $160B in cash, a loyal ecosystem of 2B+ devices, and the best hardware engineering on the planet. But the AI gap is widening, not closing.
 
-    "reddit": """Anyone else noticed that the most viral B2B content almost never comes from marketing teams?
+The real question is whether Apple's closed-ecosystem advantage in hardware and OS can survive in a world where the core intelligence layer is being built in the open, by competitors who move 10x faster.
 
-I've been tracking this pattern for about a year now. The LinkedIn posts that actually blow up in B2B aren't the polished brand posts — they're raw takes from engineers, PMs, and customer-facing people who just... share what they're dealing with.
+**The takeaway:** Apple's AI problem isn't talent or money. It's culture. And culture is the hardest thing to change.""",
 
-One example: a company I know spends $80K/month on content. Perfectly branded, agency-produced. Gets maybe 50 likes per post on their company page.
+        "reddit": """Is anyone else underwhelmed by Apple Intelligence, or am I missing something?
 
-Their VP of Eng starts posting about production debugging at 2 AM. Zero graphics, no hashtag strategy, just honest stories. Gets 10x the engagement. Started generating actual inbound leads.
+Genuine question. I've been an Apple user for 15 years and I was excited about Apple Intelligence. But after using it for months, I'm struggling to see what it actually does well.
 
-The stat that blew my mind: employee posts on LinkedIn get 8x more engagement than brand page posts. Eight times.
+The notification summaries hallucinate regularly. I got a summary that said a friend "expressed negative feelings about my relationship" — it was a restaurant recommendation. The writing tools are basic rewriting that any LLM can do. Siri is still Siri.
 
-Makes sense when you think about it. People trust people, not logos. A CSM describing a tough client call is 100x more relatable than a polished case study.
+Meanwhile I watch friends using Gemini on their Pixels doing genuinely useful stuff — real-time translation in calls, AI-organized photos that actually work, document understanding that feels magical.
 
-Curious if others are seeing this. Are any of your companies actively encouraging non-marketing people to post? How do you handle the "what if they say something off-brand" concern?
+I think Apple's privacy-first approach is admirable, but I'm starting to wonder if it's a structural disadvantage for AI. You can't build great AI without data, and Apple deliberately limits what data they can use.
 
-TL;DR: Employee-generated content massively outperforms brand content. The best content creators in your company probably aren't in marketing. Companies should be building systems to help employees share, not hiring more writers.""",
+The other thing that bugs me: Apple ships AI updates annually. Google and OpenAI ship weekly. In a field moving this fast, annual updates mean you're always 6-12 months behind.
 
-    "email": """Subject A: Your marketing team isn't your best marketing channel
-Subject B: The $80K/month content strategy that got beaten by one engineer
-Preview: Employee posts get 8x more engagement. Here's why.
+Anyone found genuine daily-use value from Apple Intelligence? Or are we all just waiting for the "real" update?
+
+TL;DR: Apple Intelligence feels 2-3 years behind Google/OpenAI. Privacy-first approach may be structurally incompatible with competitive AI development. Wondering if other Apple users feel the same or if I'm missing key features.""",
+
+        "email": """Subject A: Apple's AI is 2 years behind. Here's why it matters.
+Subject B: The $100B blind spot in Apple's strategy
+Preview: Control culture vs. AI speed. Something has to give.
 
 Hi [First Name],
 
-Quick question: who creates the content that actually drives pipeline at your company?
+Quick question: when was the last time Apple Intelligence actually helped you do something useful?
 
-If you said "the marketing team," you might be surprised.
+If you're struggling to answer, you're not alone.
 
-Employee-generated content on LinkedIn gets 8x more engagement than brand page posts. One company I talked to spent $80K/month on agency content — then watched a single engineer's LinkedIn posts outperform the entire budget.
+While Google ships Gemini updates weekly and OpenAI pushes boundaries monthly, Apple is stuck in annual release cycles. In AI, that's an eternity.
 
-The pattern is consistent: authentic content from subject matter experts outperforms polished brand content by a wide margin. People trust people, not logos.
+The root cause isn't talent or money — Apple has plenty of both. It's structural: their closed-ecosystem, privacy-first, secrecy-driven culture is fundamentally mismatched with how AI innovation works.
 
-The companies winning at content aren't hiring more writers. They're building systems that help engineers, PMs, and customer success teams share what they know.
+AI rewards speed, data, and openness. Apple's DNA is control, privacy, and secrecy.
 
-We put together a playbook for building an employee content program that actually works — including templates, approval workflows, and the metrics that matter.
+We broke down the 5 structural reasons Apple is losing the AI race — and what it means for the broader tech ecosystem.
 
-CTA: Get the employee content playbook → [link]"""
+CTA: Read the full analysis → [link]"""
+    },
+
+    "🏥 Healthcare — GLP-1 Drugs Are Disrupting Everything": {
+        "description": "Ozempic and GLP-1 drugs aren't just treating obesity. They're reshaping airline seat economics, food industry revenue, alcohol consumption, and even addiction research. The second-order effects are massive.",
+        "linkedin": """The most disruptive technology of 2024-2026 isn't AI.
+
+It's a diabetes drug.
+
+GLP-1 medications (Ozempic, Wegovy, Mounjaro) are reshaping industries that have nothing to do with healthcare:
+
+Airlines are recalculating fuel costs. If passengers weigh less on average, fuel consumption drops. One airline estimated potential savings of $80M/year.
+
+Snack companies are panicking. Walmart reported that customers on GLP-1 drugs buy measurably less food. Not different food — less food, period.
+
+Alcohol consumption is dropping among GLP-1 users. Not because the drugs target alcohol — but because they seem to reduce compulsive behavior broadly. Researchers are now studying them for gambling and smoking addiction.
+
+Bariatric surgery volumes are declining 15-20% at major hospital systems. A $2.5B surgical market is being disrupted by a weekly injection.
+
+Knee replacement demand may drop. Less weight = less joint degradation. Orthopedic device companies are quietly revising long-term forecasts.
+
+Life insurance companies are rethinking actuarial tables. If 30% of obese adults normalize their weight, mortality projections change significantly.
+
+We're watching a single class of medication reshape the economic assumptions of at least 6 major industries simultaneously.
+
+This is what real disruption looks like. Not a new app. A molecule.
+
+What second-order effects of GLP-1 drugs are you watching?
+
+#Healthcare #GLP1 #Disruption #Pharma #Innovation #SecondOrderEffects""",
+
+        "blog": """# The GLP-1 Disruption: How a Diabetes Drug Is Reshaping Airlines, Food, Insurance, and Addiction
+
+**The most consequential technology shift of the decade isn't happening in Silicon Valley.**
+
+When Novo Nordisk launched semaglutide for weight management, the obvious disruption was in healthcare: fewer obesity-related diseases, declining bariatric surgery volumes, a shift from surgical to pharmaceutical weight management.
+
+But the second-order effects are what make GLP-1 drugs arguably the most disruptive technology of the mid-2020s — and most of them have nothing to do with healthcare at all.
+
+## Airlines: The Fuel Equation Is Changing
+
+Passenger weight directly affects fuel consumption. Airlines have used average passenger weight assumptions in fuel calculations for decades. If GLP-1 adoption continues at current rates, average passenger weight could decrease meaningfully over the next 5-10 years.
+
+One major carrier estimated potential annual fuel savings of $80M if average passenger weight dropped by just a few kilograms. Across the global airline industry, the implications run into billions.
+
+## Food & Beverage: The Consumption Cliff
+
+Walmart reported measurable decreases in food purchases among customers using GLP-1 medications. Not a shift in what they buy — a reduction in how much they buy overall.
+
+For snack food companies built on high-frequency consumption, this is existential. If 15-20% of your core consumer base reduces consumption by 20-30%, the revenue impact is severe. Several major food companies have acknowledged GLP-1 drugs as a risk factor in investor presentations.
+
+## The Addiction Wildcard
+
+Perhaps the most unexpected finding: GLP-1 drugs appear to reduce compulsive behaviors beyond eating. Users report decreased alcohol consumption, reduced urge to gamble, and lower nicotine cravings.
+
+Researchers believe this is because GLP-1 receptors exist throughout the brain's reward system, not just in appetite centers. Clinical trials are now underway for alcohol use disorder and smoking cessation.
+
+If these trials succeed, the addressable market for GLP-1 drugs expands from obesity into addiction — a complete redefinition of what these molecules can do.
+
+## Insurance and Longevity
+
+Life insurance actuarial tables are built on population-level obesity and mortality data. If GLP-1 drugs meaningfully reduce obesity rates — and early data suggests they can — the entire foundation of life insurance pricing needs to be recalculated.
+
+This affects pension funds, health insurance premiums, disability projections, and long-term care planning. The financial modeling implications alone are staggering.
+
+**The takeaway:** GLP-1 drugs are the rare innovation that disrupts not one industry but many simultaneously. The companies and industries that recognize these second-order effects early will adapt. Those that don't will be caught off guard by a molecule they never saw as competition.""",
+
+        "reddit": """The second-order effects of GLP-1 drugs are wild and nobody's connecting the dots
+
+Everyone talks about Ozempic for weight loss. But the downstream economic effects are something else entirely.
+
+A few things I've been tracking:
+
+Airlines are recalculating fuel costs based on projected decreases in average passenger weight. One carrier estimated $80M/year in potential savings.
+
+Walmart publicly stated that GLP-1 users are buying measurably less food. Not healthier food — just less total volume. Snack companies are listing this as a risk factor in earnings calls.
+
+Bariatric surgery volumes are dropping 15-20% at major hospital systems. A multi-billion dollar surgical specialty is being disrupted by a weekly injection.
+
+The weirdest one: GLP-1 users are reporting reduced alcohol consumption, gambling urges, and nicotine cravings. Turns out GLP-1 receptors are all over the brain's reward system, not just appetite centers. Clinical trials for addiction treatment are already underway.
+
+And insurance companies are starting to rethink actuarial tables. If obesity rates drop significantly, mortality projections for entire populations change.
+
+We might be watching a single drug class reshape the economic assumptions of 6+ industries simultaneously. Has anyone seen analysis on the orthopedic device impact? Less obesity should mean fewer knee replacements long-term.
+
+TL;DR: GLP-1 drugs are disrupting airlines (fuel costs), food industry (less consumption), bariatric surgery (declining volumes), insurance (new actuarial models), and potentially addiction treatment. The second-order effects are more disruptive than the primary use case.""",
+
+        "email": """Subject A: A diabetes drug is disrupting 6 industries at once
+Subject B: The second-order effects nobody's modeling yet
+Preview: Airlines, food, insurance, addiction — all from one molecule.
+
+Hi [First Name],
+
+What if the most disruptive technology of 2026 isn't AI — but a diabetes drug?
+
+GLP-1 medications are creating second-order effects across industries that have nothing to do with healthcare. Airlines are recalculating fuel costs. Walmart reports measurably lower food purchases from GLP-1 users. Bariatric surgery volumes are dropping 15-20%.
+
+The wildcard: these drugs appear to reduce compulsive behavior broadly — alcohol, gambling, nicotine. Clinical trials for addiction treatment are underway.
+
+We mapped the cross-industry impact of GLP-1 adoption across 6 sectors — with the data points and projections most analysts are missing.
+
+CTA: See the GLP-1 cross-industry impact map → [link]"""
+    },
+
+    "🏭 Manufacturing — The $200B Reshoring Blind Spot": {
+        "description": "$200B+ in new US factory investments, but nobody's talking about where the skilled workers will come from. The reshoring wave has a people problem.",
+        "linkedin": PREGENERATED["linkedin"],
+        "blog": PREGENERATED["blog"],
+        "reddit": PREGENERATED["reddit"],
+        "email": PREGENERATED["email"],
+    }
 }
 
 
@@ -1062,10 +1178,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-tab_pipeline, tab_generic, tab_workerbase, tab_architecture = st.tabs([
+tab_pipeline, tab_showcase, tab_architecture = st.tabs([
     "🔧 Live Pipeline",
-    "📦 Generic Demo",
-    "🏭 Industry Demo: Workerbase",
+    "📦 Industry Showcase",
     "🏗️ Architecture"
 ])
 
@@ -1301,76 +1416,49 @@ with tab_pipeline:
 </div>""", unsafe_allow_html=True)
 
 
-# ─── TAB 2: Generic Demo ──────────────────────────────────────
-with tab_generic:
+# ─── TAB 2: Industry Showcase ─────────────────────────────────
+with tab_showcase:
     st.markdown("""
-    ### 📦 Demo — "Your Best Content Creators Don't Work in Marketing"
+    ### 📦 Industry Showcase
 
-    Employee LinkedIn posts get **8x more engagement** than brand pages.
-    A company spending $80K/month on agency content got outperformed by one engineer posting raw takes.
+    Same pipeline, different industries. Select a demo below to see how one raw insight
+    becomes four channel-native outputs — with tone, format, and CTA adapted per channel.
 
-    **One raw insight → four channel-native outputs.** No API key needed.
+    **No API key needed.** All content is pre-generated.
     """)
 
+    selected_demo = st.selectbox(
+        "Select an industry demo:",
+        list(SHOWCASE_DEMOS.keys()),
+        key="showcase_selector"
+    )
+
+    demo_data = SHOWCASE_DEMOS[selected_demo]
+
+    st.markdown(f"**Insight:** {demo_data['description']}")
     st.markdown("---")
 
-    generic_config = [
+    showcase_channels = [
         ("💼 LINKEDIN POST", "linkedin"),
         ("📝 BLOG DRAFT", "blog"),
         ("🟠 REDDIT THREAD", "reddit"),
         ("📧 EMAIL SEQUENCE", "email"),
     ]
 
-    for label, key in generic_config:
-        st.markdown(f'<div class="card-label">{label}</div>', unsafe_allow_html=True)
-        # Render platform mockup
-        renderer = MOCKUP_RENDERERS.get(key)
-        if renderer:
-            st.markdown(renderer(PREGENERATED_GENERIC[key]), unsafe_allow_html=True)
-        # Collapsible raw text + copy
-        with st.expander("📋 View raw text / copy"):
-            st.text_area(f"generic_{key}", value=PREGENERATED_GENERIC[key], height=250, key=f"gen_{key}", label_visibility="collapsed")
-            st.download_button(f"Copy {key}", PREGENERATED_GENERIC[key], file_name=f"generic_{key}.txt", key=f"dl_gen_{key}")
-        st.markdown("---")
-
-    st.info("💡 **Same pipeline, any domain.** Swap the system prompt and context injection to adapt for SaaS, fintech, healthcare, manufacturing, or any industry.")
-
-
-# ─── TAB 3: Workerbase Industry Demo ─────────────────────────
-with tab_workerbase:
-    st.markdown("""
-    ### 🏭 Industry Demo — Manufacturing / Connected Worker
-
-    Same pipeline, configured with **manufacturing domain expertise**.
-    Shows how context injection adapts every output for a specific industry.
-
-    **Input insight:** US Manufacturing Reshoring Wave — $200B+ in new factory investments,
-    but nobody's talking about where the skilled workers will come from.
-    """)
-
-    st.markdown("---")
-
-    wb_config = [
-        ("💼 LINKEDIN POST", "linkedin"),
-        ("📝 BLOG DRAFT", "blog"),
-        ("🟠 REDDIT THREAD", "reddit"),
-        ("📧 EMAIL SEQUENCE", "email"),
-    ]
-
-    for label, key in wb_config:
+    for label, key in showcase_channels:
         st.markdown(f'<div class="card-label">{label}</div>', unsafe_allow_html=True)
         renderer = MOCKUP_RENDERERS.get(key)
         if renderer:
-            st.markdown(renderer(PREGENERATED[key]), unsafe_allow_html=True)
+            st.markdown(renderer(demo_data[key]), unsafe_allow_html=True)
         with st.expander("📋 View raw text / copy"):
-            st.text_area(key, value=PREGENERATED[key], height=250, key=f"show_{key}", label_visibility="collapsed")
-            st.download_button(f"Copy {key}", PREGENERATED[key], file_name=f"workerbase_{key}.txt", key=f"dl_show_{key}")
+            st.text_area(f"sc_{key}_{selected_demo[:4]}", value=demo_data[key], height=250, key=f"sc_{key}_{hash(selected_demo) % 10000}", label_visibility="collapsed")
+            st.download_button(f"Copy {key}", demo_data[key], file_name=f"showcase_{key}.txt", key=f"dl_sc_{key}_{hash(selected_demo) % 10000}")
         st.markdown("---")
 
-    st.info("💡 **All four outputs came from the same raw insight.** Compare the tone between this tab and the Generic Demo — same pipeline, different domain injection.")
+    st.info("💡 **Same pipeline, 3 industries.** Switch the dropdown above to see how context injection adapts every output for a different domain.")
 
 
-# ─── TAB 4: Architecture ─────────────────────────────────────
+# ─── TAB 3: Architecture ─────────────────────────────────────
 with tab_architecture:
     st.markdown("""
     ### 🏗️ How ContentEngine Works
