@@ -590,6 +590,86 @@ def repurpose_content(client, content, context):
         return None, "Failed to parse repurposed content."
     except Exception as e:
         return None, f"Error: {str(e)[:150]}"
+
+
+def build_markdown_bundle(results, insight_text="", channel_labels=None):
+    """Build a complete Markdown document with all generated content."""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    if not channel_labels:
+        channel_labels = {
+            "linkedin": "LinkedIn Post", "blog": "Blog Draft",
+            "reddit": "Reddit Thread", "email": "Email Sequence"
+        }
+
+    md = f"""# ContentEngine AI — Export Bundle
+**Generated:** {now}
+**Source insight:** {insight_text[:200]}{'...' if len(insight_text) > 200 else ''}
+
+---
+
+"""
+    for ch, content in results.items():
+        label = channel_labels.get(ch, ch)
+        md += f"## {label}\n\n{content}\n\n---\n\n"
+
+    return md
+
+
+def build_content_calendar(results, channel_labels=None):
+    """Build a simple content calendar as a Markdown table."""
+    if not channel_labels:
+        channel_labels = {
+            "linkedin": "LinkedIn Post", "blog": "Blog Draft",
+            "reddit": "Reddit Thread", "email": "Email Sequence"
+        }
+
+    now = datetime.now()
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+
+    # Assign each piece to a day
+    channels = list(results.keys())
+    cal = "# Content Calendar\n\n"
+    cal += "| Day | Channel | Content Preview | Status |\n"
+    cal += "|---|---|---|---|\n"
+
+    for i, ch in enumerate(channels):
+        day = days[i % len(days)]
+        label = channel_labels.get(ch, ch)
+        # First 80 chars as preview
+        preview = results[ch][:80].replace("\n", " ").replace("|", "/") + "..."
+        cal += f"| {day} | {label} | {preview} | 📝 Draft |\n"
+
+    cal += "\n---\n\n"
+
+    # Full content below
+    cal += "## Full Content\n\n"
+    for ch, content in results.items():
+        label = channel_labels.get(ch, ch)
+        cal += f"### {label}\n\n{content}\n\n---\n\n"
+
+    return cal
+
+
+def build_repurpose_bundle(result):
+    """Build a Markdown bundle from repurpose output."""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    md = f"""# ContentEngine AI — Repurpose Bundle
+**Generated:** {now}
+**Source:** {result.get('title_summary', 'Content repurposed')}
+**Pieces:** {len(result.get('pieces', []))}
+
+---
+
+"""
+    for i, piece in enumerate(result.get("pieces", []), 1):
+        label = piece.get("label", f"Piece {i}")
+        content = piece.get("content", "")
+        md += f"## {i}. {label}\n\n{content}\n\n---\n\n"
+
+    return md
+
+
+def get_client():
     # Priority: st.secrets > user input
     api_key = ""
     try:
@@ -1519,6 +1599,48 @@ with tab_pipeline:
                             key=f"dl_{ch}"
                         )
 
+                # ── Export All ────────────────────────────
+                st.markdown("---")
+                st.markdown("### 📦 Export All")
+
+                col_md, col_cal, col_txt = st.columns(3)
+
+                with col_md:
+                    md_bundle = build_markdown_bundle(results, insight_text, channel_labels)
+                    st.download_button(
+                        "📄 Markdown Bundle",
+                        md_bundle,
+                        file_name=f"contentengine_bundle_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+                        mime="text/markdown",
+                        use_container_width=True,
+                        key="dl_md_bundle"
+                    )
+
+                with col_cal:
+                    cal = build_content_calendar(results, channel_labels)
+                    st.download_button(
+                        "🗓️ Content Calendar",
+                        cal,
+                        file_name=f"content_calendar_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+                        mime="text/markdown",
+                        use_container_width=True,
+                        key="dl_calendar"
+                    )
+
+                with col_txt:
+                    all_txt = "\n\n".join([
+                        f"=== {channel_labels.get(ch, ch).upper()} ===\n\n{content}"
+                        for ch, content in results.items()
+                    ])
+                    st.download_button(
+                        "📋 Plain Text (All)",
+                        all_txt,
+                        file_name=f"contentengine_all_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                        mime="text/plain",
+                        use_container_width=True,
+                        key="dl_all_txt"
+                    )
+
                 # Quality scoring (optional)
                 if enable_scoring:
                     st.markdown("---")
@@ -1673,20 +1795,35 @@ with tab_repurpose:
 
                     # Download all
                     st.markdown("---")
-                    all_content = "\n\n" + "="*60 + "\n\n"
-                    all_content = all_content.join([
-                        f"[{p.get('label', f'Piece {i}')}]\n\n{p.get('content', '')}"
-                        for i, p in enumerate(result.get("pieces", []), 1)
-                    ])
-                    st.download_button(
-                        "📦 Download All 10 Pieces",
-                        all_content,
-                        file_name=f"repurposed_all_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-                        mime="text/plain",
-                        type="primary",
-                        use_container_width=True,
-                        key="dl_rep_all"
-                    )
+                    st.markdown("### 📦 Export All")
+
+                    col_md_r, col_txt_r = st.columns(2)
+
+                    with col_md_r:
+                        md_rep = build_repurpose_bundle(result)
+                        st.download_button(
+                            "📄 Markdown Bundle",
+                            md_rep,
+                            file_name=f"repurposed_bundle_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+                            mime="text/markdown",
+                            use_container_width=True,
+                            key="dl_rep_md"
+                        )
+
+                    with col_txt_r:
+                        all_content = "\n\n" + "="*60 + "\n\n"
+                        all_content = all_content.join([
+                            f"[{p.get('label', f'Piece {i}')}]\n\n{p.get('content', '')}"
+                            for i, p in enumerate(result.get("pieces", []), 1)
+                        ])
+                        st.download_button(
+                            "📋 Plain Text (All)",
+                            all_content,
+                            file_name=f"repurposed_all_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                            mime="text/plain",
+                            use_container_width=True,
+                            key="dl_rep_all"
+                        )
 
 
 # ─── TAB 3: Industry Showcase ─────────────────────────────────
