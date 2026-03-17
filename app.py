@@ -592,6 +592,43 @@ def repurpose_content(client, content, context):
         return None, f"Error: {str(e)[:150]}"
 
 
+# ── Image Generation (Free — Pollinations.ai) ────────────────
+
+def generate_image_url(prompt, width=1200, height=630, seed=None):
+    """Generate a free AI image URL via Pollinations.ai. No API key needed."""
+    import urllib.parse
+    clean_prompt = prompt.strip()[:500]  # Limit prompt length
+    encoded = urllib.parse.quote(clean_prompt)
+    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&nologo=true"
+    if seed:
+        url += f"&seed={seed}"
+    return url
+
+
+def get_blog_header_prompt(blog_content):
+    """Extract a visual prompt from blog content for header image."""
+    # Get the headline
+    lines = blog_content.strip().split("\n")
+    headline = lines[0].lstrip("# ").strip() if lines else "Business content"
+    # Create a visual prompt
+    return f"Professional minimalist blog header image for article titled '{headline}', abstract geometric shapes, corporate blue and indigo gradient, clean modern design, no text, editorial style, 4k"
+
+
+def get_quote_card_prompt(quote_text):
+    """Generate a visual prompt for a quote card background."""
+    return f"Elegant minimalist background for quote card, subtle gradient, professional corporate style, soft bokeh, dark navy and gold accent, no text, abstract, high quality"
+
+
+def render_image_with_fallback(url, caption="", width=None):
+    """Render an image from URL with loading fallback."""
+    try:
+        st.image(url, caption=caption, use_container_width=True if not width else False, width=width)
+        return True
+    except Exception:
+        st.caption(f"🖼️ [View generated image]({url})")
+        return False
+
+
 def build_markdown_bundle(results, insight_text="", channel_labels=None):
     """Build a complete Markdown document with all generated content."""
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -1352,6 +1389,12 @@ with st.sidebar:
 
     st.divider()
 
+    st.markdown("### 🖼️ AI Visuals")
+    enable_images = st.checkbox("Generate images", value=True,
+        help="Auto-generate blog header images and quote card backgrounds. Free via Pollinations.ai — no API key needed.")
+
+    st.divider()
+
     st.markdown(
         "<div style='font-size:0.75rem; color:#94a3b8; font-family: JetBrains Mono, monospace;'>"
         "Built by Ata Okuzcuoglu<br>"
@@ -1369,7 +1412,7 @@ st.markdown("""
     <div class="hero-subtitle">
         Paste an insight, drop a URL, or upload a doc — get publish-ready content for LinkedIn, your blog, Reddit, and email. All at once.
     </div>
-    <div class="hero-badge">Brand Voice Cloning · Repurpose Mode · Quality Scoring · Multi-Source Input</div>
+    <div class="hero-badge">Brand Voice Cloning · Repurpose Mode · AI Visuals · Quality Scoring</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1582,6 +1625,19 @@ with tab_pipeline:
                 # Output cards
                 for ch in channels:
                     st.markdown(f'<div class="content-card"><div class="card-label">{channel_labels[ch]}</div></div>', unsafe_allow_html=True)
+
+                    # AI-generated header image for blog
+                    if enable_images and ch == "blog":
+                        img_prompt = get_blog_header_prompt(results[ch])
+                        img_url = generate_image_url(img_prompt, width=1200, height=630, seed=42)
+                        st.image(img_url, caption="🖼️ AI-generated blog header (Pollinations.ai — free)", use_container_width=True)
+
+                    # AI-generated visual for LinkedIn
+                    if enable_images and ch == "linkedin":
+                        li_prompt = f"Professional LinkedIn post visual, abstract data visualization, corporate blue gradient, modern minimalist infographic style, no text, clean, editorial, 4k"
+                        li_url = generate_image_url(li_prompt, width=1200, height=627, seed=77)
+                        st.image(li_url, caption="🖼️ AI-generated post visual (Pollinations.ai — free)", use_container_width=True)
+
                     st.text_area(
                         f"{ch} output",
                         value=results[ch],
@@ -1772,6 +1828,16 @@ with tab_repurpose:
 
                         st.markdown(f'<div class="content-card"><div class="card-label">{icon} {label}</div></div>', unsafe_allow_html=True)
 
+                        # AI-generated images for visual formats
+                        if enable_images:
+                            if "blog" in fmt.lower():
+                                img_prompt = get_blog_header_prompt(content)
+                                st.image(generate_image_url(img_prompt, 1200, 630, seed=i*10), caption="🖼️ AI header", use_container_width=True)
+                            elif "quote" in fmt.lower():
+                                st.image(generate_image_url(get_quote_card_prompt(content), 1080, 1080, seed=i*20), caption="🖼️ Quote card background", use_container_width=True)
+                            elif "carousel" in fmt.lower():
+                                st.image(generate_image_url("Professional carousel slide background, clean gradient, modern geometric shapes, corporate style, no text, abstract, indigo and white, 4k", 1080, 1080, seed=i*30), caption="🖼️ Carousel slide background", use_container_width=True)
+
                         # Use appropriate mockup for known formats
                         if "linkedin" in fmt.lower():
                             st.markdown(render_linkedin_mockup(content), unsafe_allow_html=True)
@@ -1855,6 +1921,17 @@ with tab_showcase:
 
     for label, key in showcase_channels:
         st.markdown(f'<div class="card-label">{label}</div>', unsafe_allow_html=True)
+
+        # AI-generated image for blog and linkedin showcases
+        if enable_images and key == "blog":
+            img_prompt = get_blog_header_prompt(demo_data[key])
+            demo_seed = hash(selected_demo) % 1000
+            st.image(generate_image_url(img_prompt, 1200, 630, seed=demo_seed), caption="🖼️ AI-generated blog header", use_container_width=True)
+        elif enable_images and key == "linkedin":
+            demo_seed = (hash(selected_demo) % 1000) + 100
+            li_prompt = f"Professional thought leadership visual, abstract corporate infographic, modern gradient, editorial style, no text, 4k"
+            st.image(generate_image_url(li_prompt, 1200, 627, seed=demo_seed), caption="🖼️ AI-generated post visual", use_container_width=True)
+
         renderer = MOCKUP_RENDERERS.get(key)
         if renderer:
             st.markdown(renderer(demo_data[key]), unsafe_allow_html=True)
