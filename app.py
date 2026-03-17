@@ -1092,22 +1092,11 @@ def render_image_with_fallback(url, caption="", width=None):
 
 
 def show_image_with_download(img_url, caption, key_suffix, filename="generated_image.png"):
-    """Show AI image with graceful CSS fallback if generation fails."""
-    st.markdown(f"""
-<div style="border-radius:10px; overflow:hidden; margin:0.5rem 0; border:1px solid #e5e7eb; position:relative;">
-    <div id="img_fallback_{key_suffix}" style="width:100%; height:200px; background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%); display:flex; align-items:center; justify-content:center;">
-        <span style="color:rgba(255,255,255,0.4); font-size:0.85rem;">🖼️ AI visual loading...</span>
-    </div>
-    <img src="{img_url}" 
-         style="width:100%; display:block; position:absolute; top:0; left:0;" 
-         loading="lazy"
-         onload="this.style.position='relative'; document.getElementById('img_fallback_{key_suffix}').style.display='none';"
-         onerror="this.style.display='none';">
-    <div style="padding:6px 12px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; border-top:1px solid #e5e7eb;">
-        <span style="color:#94a3b8;">{caption}</span>
-        <a href="{img_url}" target="_blank" style="color:#6366f1; text-decoration:none;">Open image ↗</a>
-    </div>
-</div>""", unsafe_allow_html=True)
+    """Show AI image. Fails silently — never breaks the page."""
+    try:
+        st.image(img_url, caption=caption, use_container_width=True)
+    except Exception:
+        pass
 
 
 def build_markdown_bundle(results, insight_text="", channel_labels=None):
@@ -1298,16 +1287,16 @@ def score_content(client, content, channel):
 def render_linkedin_mockup(content):
     safe = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     return f"""
-<div class="linkedin-mockup">
-    <div class="linkedin-header">
-        <div class="linkedin-avatar">CE</div>
-        <div class="linkedin-meta">
-            <div class="linkedin-name">ContentEngine AI</div>
-            <div class="linkedin-title">Generated via Pipeline · Just now · 🌐</div>
+<div style="background:#fff; border:1px solid #e0e0e0; border-radius:8px; overflow:hidden; margin:1rem 0; font-family:-apple-system,system-ui,sans-serif;">
+    <div style="padding:12px 16px; display:flex; align-items:center; gap:10px;">
+        <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#0a66c2,#004182); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px; flex-shrink:0;">CE</div>
+        <div>
+            <div style="font-weight:600; color:#000; font-size:0.9rem;">ContentEngine AI</div>
+            <div style="color:#666; font-size:0.75rem;">Generated via Pipeline · Just now</div>
         </div>
     </div>
-    <div class="linkedin-body">{safe}</div>
-    <div class="linkedin-actions">
+    <div style="padding:0 16px 16px; font-size:0.9rem; line-height:1.6; color:#333; white-space:pre-wrap;">{safe}</div>
+    <div style="padding:8px 16px; border-top:1px solid #e0e0e0; display:flex; justify-content:space-around; color:#666; font-size:0.8rem;">
         <span>👍 Like</span><span>💬 Comment</span><span>🔄 Repost</span><span>📤 Send</span>
     </div>
 </div>"""
@@ -1320,20 +1309,20 @@ def render_reddit_mockup(content):
     safe_t = title.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
     safe_b = body.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
     return f"""
-<div class="reddit-mockup">
+<div style="background:#fff; border:1px solid #ccc; border-radius:4px; overflow:hidden; margin:1rem 0; font-family:-apple-system,system-ui,sans-serif;">
     <div style="display:flex;">
-        <div class="reddit-sidebar">
-            <span class="reddit-vote">▲</span>
-            <span class="reddit-vote-count">247</span>
-            <span class="reddit-vote">▼</span>
+        <div style="background:#f8f9fa; padding:8px; display:flex; flex-direction:column; align-items:center; gap:4px; min-width:40px;">
+            <span style="color:#878a8c; font-size:0.75rem;">▲</span>
+            <span style="color:#1a1a1b; font-weight:700; font-size:0.85rem;">247</span>
+            <span style="color:#878a8c; font-size:0.75rem;">▼</span>
         </div>
-        <div class="reddit-content">
-            <div class="reddit-sub"><strong>r/marketing</strong> · Posted by u/contentengine · 2h</div>
-            <div class="reddit-title-text">{safe_t}</div>
-            <div class="reddit-body">{safe_b}</div>
+        <div style="padding:8px 12px; flex:1;">
+            <div style="font-size:0.75rem; color:#787c7e; margin-bottom:4px;"><strong style="color:#1c1c1c;">r/marketing</strong> · Posted by u/contentengine · 2h</div>
+            <div style="font-size:1.1rem; font-weight:600; color:#1a1a1b; margin-bottom:8px;">{safe_t}</div>
+            <div style="font-size:0.9rem; line-height:1.5; color:#1a1a1b; white-space:pre-wrap;">{safe_b}</div>
         </div>
     </div>
-    <div class="reddit-footer">
+    <div style="padding:4px 12px 8px; font-size:0.75rem; color:#878a8c; display:flex; gap:12px;">
         <span>💬 42 Comments</span><span>📤 Share</span><span>⭐ Save</span>
     </div>
 </div>"""
@@ -1348,13 +1337,13 @@ def render_email_mockup(content):
             break
     safe_s = subject.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
     return f"""
-<div class="email-mockup">
-    <div class="email-toolbar">
-        <span>📥 Inbox</span> → <span style="color:#202124;font-weight:600;">ContentEngine</span>
+<div style="background:#fff; border:1px solid #dadce0; border-radius:8px; overflow:hidden; margin:1rem 0; font-family:-apple-system,system-ui,sans-serif; max-width:600px;">
+    <div style="background:#f2f2f2; padding:8px 16px; font-size:0.8rem; color:#5f6368; border-bottom:1px solid #dadce0;">
+        📥 Inbox → <span style="color:#202124; font-weight:600;">ContentEngine</span>
     </div>
-    <div class="email-subject">{safe_s}</div>
-    <div class="email-meta">From: content@company.com · To: [First Name] · Now</div>
-    <div class="email-body-content">{safe}</div>
+    <div style="padding:12px 16px; font-size:1rem; font-weight:600; color:#202124; border-bottom:1px solid #f0f0f0;">{safe_s}</div>
+    <div style="padding:8px 16px; font-size:0.8rem; color:#5f6368;">From: content@company.com · To: [First Name] · Now</div>
+    <div style="padding:16px; font-size:0.9rem; line-height:1.7; color:#202124; white-space:pre-wrap;">{safe}</div>
 </div>"""
 
 
@@ -1364,45 +1353,37 @@ def render_blog_mockup(content):
     headline = lines[0].lstrip("# ").strip() if lines else "Untitled"
     body_lines = lines[1:]
 
-    # Simple markdown → HTML conversion
     html_parts = []
     for line in body_lines:
         line = line.strip()
         if not line:
             html_parts.append("<br>")
             continue
-        # Headings
         if line.startswith("## "):
             text = line.lstrip("# ").strip()
             text = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-            html_parts.append(f'<h3 style="font-family: DM Sans, sans-serif; font-size:1.1rem; font-weight:700; color:#1a1a2e; margin:20px 0 8px;">{text}</h3>')
+            html_parts.append(f'<h3 style="font-size:1.1rem; font-weight:700; color:#1a1a2e; margin:20px 0 8px;">{text}</h3>')
             continue
-        # Bold
         line = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', line)
-        # Italic
         line = re.sub(r'\*(.+?)\*', r'<em>\1</em>', line)
-        # Escape remaining HTML (but preserve our tags)
         safe_line = line.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-        # Restore our tags
         safe_line = safe_line.replace("&lt;strong&gt;", "<strong>").replace("&lt;/strong&gt;", "</strong>")
         safe_line = safe_line.replace("&lt;em&gt;", "<em>").replace("&lt;/em&gt;", "</em>")
         html_parts.append(f'<p style="margin:0 0 8px;">{safe_line}</p>')
 
     body_html = "\n".join(html_parts)
     safe_h = headline.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-
-    # Word count for read time
     word_count = len(content.split())
     read_min = max(1, word_count // 200)
 
     return f"""
-<div class="blog-mockup">
-    <div class="blog-header-bar">
-        <div class="blog-category">Insights</div>
-        <div class="blog-headline">{safe_h}</div>
-        <div class="blog-byline">ContentEngine AI · {read_min} min read</div>
+<div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; margin:1rem 0; font-family:Georgia,serif;">
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e); padding:24px;">
+        <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; color:#818cf8; margin-bottom:8px; font-family:sans-serif;">Insights</div>
+        <div style="font-size:1.4rem; font-weight:700; color:#fff; line-height:1.3;">{safe_h}</div>
+        <div style="font-size:0.8rem; color:rgba(255,255,255,0.5); margin-top:12px; font-family:sans-serif;">ContentEngine AI · {read_min} min read</div>
     </div>
-    <div class="blog-body-content" style="white-space:normal;">{body_html}</div>
+    <div style="padding:24px; font-size:0.95rem; line-height:1.8; color:#374151;">{body_html}</div>
 </div>"""
 
 
@@ -1871,8 +1852,8 @@ with st.sidebar:
     st.divider()
 
     st.markdown("### 🖼️ AI Visuals")
-    enable_images = st.checkbox("Generate images", value=True,
-        help="Auto-generate blog header images and quote card backgrounds. Free via Pollinations.ai — no API key needed.")
+    enable_images = st.checkbox("Generate images (experimental)", value=False,
+        help="Auto-generate blog headers and visual assets via Pollinations.ai. Free but may be slow or unavailable.")
 
     st.divider()
 
