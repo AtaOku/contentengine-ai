@@ -673,19 +673,50 @@ def render_email_mockup(content):
 
 
 def render_blog_mockup(content):
+    import re
     lines = content.strip().split("\n")
-    headline = lines[0].lstrip("# ") if lines else "Untitled"
-    body = "\n".join(lines[1:])
+    headline = lines[0].lstrip("# ").strip() if lines else "Untitled"
+    body_lines = lines[1:]
+
+    # Simple markdown → HTML conversion
+    html_parts = []
+    for line in body_lines:
+        line = line.strip()
+        if not line:
+            html_parts.append("<br>")
+            continue
+        # Headings
+        if line.startswith("## "):
+            text = line.lstrip("# ").strip()
+            text = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+            html_parts.append(f'<h3 style="font-family: DM Sans, sans-serif; font-size:1.1rem; font-weight:700; color:#1a1a2e; margin:20px 0 8px;">{text}</h3>')
+            continue
+        # Bold
+        line = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', line)
+        # Italic
+        line = re.sub(r'\*(.+?)\*', r'<em>\1</em>', line)
+        # Escape remaining HTML (but preserve our tags)
+        safe_line = line.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+        # Restore our tags
+        safe_line = safe_line.replace("&lt;strong&gt;", "<strong>").replace("&lt;/strong&gt;", "</strong>")
+        safe_line = safe_line.replace("&lt;em&gt;", "<em>").replace("&lt;/em&gt;", "</em>")
+        html_parts.append(f'<p style="margin:0 0 8px;">{safe_line}</p>')
+
+    body_html = "\n".join(html_parts)
     safe_h = headline.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-    safe_b = body.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+
+    # Word count for read time
+    word_count = len(content.split())
+    read_min = max(1, word_count // 200)
+
     return f"""
 <div class="blog-mockup">
     <div class="blog-header-bar">
         <div class="blog-category">Insights</div>
         <div class="blog-headline">{safe_h}</div>
-        <div class="blog-byline">ContentEngine AI · 5 min read</div>
+        <div class="blog-byline">ContentEngine AI · {read_min} min read</div>
     </div>
-    <div class="blog-body-content">{safe_b}</div>
+    <div class="blog-body-content" style="white-space:normal;">{body_html}</div>
 </div>"""
 
 
@@ -1079,8 +1110,8 @@ with st.sidebar:
     st.divider()
 
     st.markdown("### 🏭 Context Injection")
-    default_ctx = "B2B SaaS company. Customize this context for your industry — it gets injected into every generation to ensure domain-relevant output."
-    context = st.text_area("Background context (injected into every prompt)", value=default_ctx, height=120)
+    default_ctx = "Tell the AI about your company, product, or industry. This background gets woven into every piece of content it generates."
+    context = st.text_area("What does your company do?", value=default_ctx, height=120)
 
     st.divider()
 
@@ -1156,11 +1187,7 @@ with st.sidebar:
     st.markdown(
         "<div style='font-size:0.75rem; color:#94a3b8; font-family: JetBrains Mono, monospace;'>"
         "Built by Ata Okuzcuoglu<br>"
-        "MSc Management & Technology @ TUM<br>"
-        "<br>"
-        "Pipeline: Insight → Analysis → 4 Channels<br>"
-        "Powered by Claude API<br>"
-        "Prompt-chained, not prompt-and-pray"
+        "MSc Management & Technology @ TUM"
         "</div>",
         unsafe_allow_html=True
     )
@@ -1172,9 +1199,22 @@ st.markdown("""
 <div class="hero-header">
     <div class="hero-title">⚡ ContentEngine AI</div>
     <div class="hero-subtitle">
-        Raw insight in. Publish-ready content out. Four channels. Under 60 seconds.
+        Paste an insight, drop a URL, or upload a doc — get publish-ready content for LinkedIn, your blog, Reddit, and email. All at once.
     </div>
-    <div class="hero-badge">PIPELINE v2.0 — Brand Voice Cloning · Quality Scoring · Multi-Source Input</div>
+    <div class="hero-badge">Brand Voice Cloning · Quality Scoring · Multi-Source Input</div>
+</div>
+""", unsafe_allow_html=True)
+
+# Welcome intro
+st.markdown("""
+<div style="background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border: 1px solid #c3d4f7;">
+    <div style="font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: #1e3a5f; line-height: 1.6;">
+        <strong>How to use:</strong><br>
+        <strong>1.</strong> Go to <strong>Live Pipeline</strong> → paste text, a URL, or upload a PDF/DOCX<br>
+        <strong>2.</strong> Pick your tone and audience → hit <strong>Run Pipeline</strong><br>
+        <strong>3.</strong> Get 4 channel-ready outputs instantly — copy, download, or tweak<br>
+        <strong>→</strong> Want to see examples first? Check <strong>Industry Showcase</strong> — no setup needed.
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1187,24 +1227,16 @@ tab_pipeline, tab_showcase, tab_architecture = st.tabs([
 
 # ─── TAB 1: Live Pipeline ────────────────────────────────────
 with tab_pipeline:
-    st.markdown("### 📥 Drop Your Raw Insight")
+    st.markdown("### 📥 What's your raw material?")
+    st.caption("Paste anything — a headline, a competitor's blog post, a customer quote, a trend you spotted. The pipeline turns it into content.")
 
     input_mode = st.radio(
         "Input method:",
-        ["✍️ Write / Paste", "🔗 URL", "📄 Upload File", "📦 Demo"],
+        ["✍️ Write / Paste", "🔗 URL", "📄 Upload File"],
         horizontal=True,
     )
 
-    if input_mode == "📦 Demo":
-        demo_choice = st.selectbox(
-            "Select a demo insight:",
-            list(DEMO_INSIGHTS.keys()),
-        )
-        demo = DEMO_INSIGHTS[demo_choice]
-        insight_text = st.text_area("Raw insight", value=demo["insight"].strip(), height=140)
-        context = demo["context"].strip()
-
-    elif input_mode == "🔗 URL":
+    if input_mode == "🔗 URL":
         url_input = st.text_input(
             "Article / post URL",
             placeholder="https://techcrunch.com/2026/... — any article, blog post, or news page",
@@ -1256,7 +1288,7 @@ with tab_pipeline:
 
     # ── Tone & Audience Controls ──────────────────────────────
     st.markdown("---")
-    st.markdown("### 🎨 Content Controls")
+    st.markdown("### 🎨 How should it sound?")
     col_tone, col_audience = st.columns(2)
 
     with col_tone:
@@ -1419,23 +1451,21 @@ with tab_pipeline:
 # ─── TAB 2: Industry Showcase ─────────────────────────────────
 with tab_showcase:
     st.markdown("""
-    ### 📦 Industry Showcase
+    ### 📦 See It in Action
 
-    Same pipeline, different industries. Select a demo below to see how one raw insight
-    becomes four channel-native outputs — with tone, format, and CTA adapted per channel.
-
-    **No API key needed.** All content is pre-generated.
+    Pick an industry. See how one raw insight turns into a LinkedIn post, blog article,
+    Reddit thread, and email — each written for its platform. Ready to publish.
     """)
 
     selected_demo = st.selectbox(
-        "Select an industry demo:",
+        "Pick an industry:",
         list(SHOWCASE_DEMOS.keys()),
         key="showcase_selector"
     )
 
     demo_data = SHOWCASE_DEMOS[selected_demo]
 
-    st.markdown(f"**Insight:** {demo_data['description']}")
+    st.markdown(f"**The insight:** {demo_data['description']}")
     st.markdown("---")
 
     showcase_channels = [
@@ -1455,7 +1485,7 @@ with tab_showcase:
             st.download_button(f"Copy {key}", demo_data[key], file_name=f"showcase_{key}.txt", key=f"dl_sc_{key}_{hash(selected_demo) % 10000}")
         st.markdown("---")
 
-    st.info("💡 **Same pipeline, 3 industries.** Switch the dropdown above to see how context injection adapts every output for a different domain.")
+    st.info("💡 **Same insight, 4 platforms, different voice each time.** Switch industries above to compare. Then try it yourself in the Live Pipeline tab.")
 
 
 # ─── TAB 3: Architecture ─────────────────────────────────────
