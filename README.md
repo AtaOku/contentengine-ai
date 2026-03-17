@@ -1,8 +1,8 @@
 # ⚡ ContentEngine AI
 
-**AI-powered content pipeline. One insight → four channels → under 60 seconds.**
+**AI content pipeline. One insight → four channels → under 60 seconds.**
 
-Drop in a raw signal — news, URL, PDF, customer quote — and get publish-ready LinkedIn posts, blog drafts, Reddit threads, and email sequences. With Brand Voice Cloning, SEO analysis, AI visuals, and quality scoring built in.
+Drop in text, a URL, or a file. Get publish-ready LinkedIn posts, blog drafts, Reddit threads, and email sequences — with Brand Voice Cloning, SEO analysis, AI visuals, and quality scoring. Free to use.
 
 **[Live Demo](https://contentengine-ai.streamlit.app)** · **[Case Study](https://www.notion.so/326feccf871081f7a3cde0e1033be38b)** · Built by [Ata Okuzcuoglu](https://linkedin.com/in/atakzcgl)
 
@@ -14,75 +14,51 @@ Drop in a raw signal — news, URL, PDF, customer quote — and get publish-read
 Paste text, import a URL, or upload a PDF/DOCX → get 4 channel-native outputs with tone and audience controls.
 
 ### 🔄 Repurpose Mode
-Drop a long blog post or article → get 10 different content pieces: 3 LinkedIn posts, X thread, short blog, email, Reddit thread, carousel outline, newsletter blurb, quote cards.
+Drop a long blog post or article → get 10 different content pieces: 3 LinkedIn posts, X thread, short blog, email, Reddit thread, carousel outline, newsletter blurb, 3 quote cards.
 
 ### 🧬 Brand Voice Cloning
-Upload 3-5 writing samples → AI extracts voice DNA (hook patterns, sentence style, signature phrases, tone markers). Every output matches that voice.
+Upload 3-5 writing samples → AI extracts voice DNA (hook patterns, sentence style, signature phrases, tone markers) → every output matches that voice.
 
-### 📊 SEO Readiness Analysis
-Every blog output gets instant SEO scoring — pure Python, zero API cost:
+### 📊 SEO Readiness (replaces $89/mo Surfer SEO)
+Every blog output gets instant analysis — zero API cost, pure Python:
+- SEO Score (0-100)
 - Flesch-Kincaid readability + grade level
 - Word count optimization check
-- Keyword extraction (frequency-based)
-- Heading structure analysis (H1/H2/H3)
+- Keyword extraction
+- Heading structure analysis
 - Auto-generated meta description (155 chars)
-- Composite SEO score (0-100)
 
-Replaces what Surfer SEO charges $89/month for.
+### 🖼️ AI Visuals (free via Pollinations.ai)
+Blog headers, LinkedIn visuals, quote card backgrounds, carousel slides — auto-generated and downloadable as PNG.
 
-### 🖼️ AI Visuals
-Auto-generated images via Pollinations.ai (free, no API key):
-- Blog header images (1200×630)
-- LinkedIn post visuals
-- Quote card backgrounds
-- Carousel slide backgrounds
-- All downloadable as PNG
-
-### 📈 Content Quality Scoring
-5-dimension scoring per output: hook strength, readability, specificity, channel fit, CTA clarity. With improvement suggestions.
+### 📈 Quality Scoring
+5-dimension scoring per output: hook strength, readability, specificity, channel fit, CTA clarity.
 
 ### 📦 Export All
-- Markdown Bundle (.md)
-- Content Calendar (weekday assignments + previews)
-- Plain Text (copy-paste ready)
+Markdown bundle, content calendar, or plain text — download everything in one click.
 
----
-
-## Industry Showcase
-
-Pre-generated demos across 3 industries — no API key needed:
-
-| Demo | Topic |
-|---|---|
-| 🍎 Tech | Apple's AI strategy is failing — control culture vs AI speed |
-| 🏥 Healthcare | GLP-1 drugs disrupting 6+ industries beyond obesity |
-| 🏭 Manufacturing | $200B reshoring wave with no workers to fill it |
-
-Each demo shows platform-native mockups: LinkedIn cards, Reddit threads, email inboxes, blog layouts.
+### 📄 Multi-Source Input
+Text, URL (auto-extract), PDF, DOCX, CSV, Markdown — drop anything in.
 
 ---
 
 ## Architecture
 
 ```
-INPUTS (Text, URL, PDF, DOCX, CSV)
-        │
-   ┌────┴────┐
-   │ EXTRACT  │──→ ANALYSIS ──→ PARALLEL GENERATE
-   │ CONTENT  │    (angles,     (4 channels +
-   └─────────┘     hooks,        voice + tone)
-                    pain)              │
-   ┌─────────┐                   ┌────┴────┐
-   │ BRAND   │──────────────────→│ OUTPUTS │
-   │ VOICE   │                   │ + SEO   │
-   └─────────┘                   │ + SCORE │
-   ┌─────────┐                   │ + IMAGE │
-   │ TONE +  │──────────────────→│         │
-   │AUDIENCE │                   └─────────┘
-   └─────────┘
+INPUTS (Text, URL, PDF, DOCX)
+    │
+    ▼
+ANALYSIS → PARALLEL GENERATE → 4 OUTPUTS
+    │         + Voice Profile       │
+    │         + Tone/Audience       │
+    │                               ▼
+    │                          SEO ANALYSIS
+    │                          AI VISUALS
+    │                          QUALITY SCORE
+    │                               │
+    ▼                               ▼
+EXPORT (Markdown · Calendar · TXT · PNG)
 ```
-
-**5-Layer Prompt Architecture:** System Prompt → Analysis → Format Prompts → Context Injection → Voice Profile
 
 ---
 
@@ -93,8 +69,6 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-For public deployment: add `ANTHROPIC_API_KEY` to Streamlit Secrets.
-
 ---
 
 ## Tech Stack
@@ -102,12 +76,11 @@ For public deployment: add `ANTHROPIC_API_KEY` to Streamlit Secrets.
 | Component | Detail |
 |---|---|
 | Model | Claude Sonnet 4 |
-| Framework | Streamlit |
 | SEO Analysis | Pure Python (Flesch-Kincaid, keyword extraction) |
+| AI Visuals | Pollinations.ai (free, no API key) |
 | URL Extraction | BeautifulSoup |
-| PDF Processing | PyPDF2 |
-| DOCX Processing | python-docx |
-| AI Visuals | Pollinations.ai (free) |
+| PDF/DOCX | PyPDF2, python-docx |
+| Framework | Streamlit |
 | Deployment | Streamlit Cloud |
 
 ---
