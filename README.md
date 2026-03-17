@@ -1,64 +1,43 @@
 # ⚡ ContentEngine AI
 
-**AI content pipeline. One insight → four channels → under 60 seconds.**
+**Full-stack AI content operations system. From "what should I write?" to "published across 4 channels" — in one tool.**
 
-Drop in text, a URL, or a file. Get publish-ready LinkedIn posts, blog drafts, Reddit threads, and email sequences — with Brand Voice Cloning, SEO analysis, AI visuals, and quality scoring. Free to use.
+Trend detection → content generation → repurposing → SEO analysis → visual assets → distribution planning. With Brand Voice Cloning, quality scoring, and AI-generated visuals. Free to use.
 
 **[Live Demo](https://contentengine-ai.streamlit.app)** · **[Case Study](https://www.notion.so/326feccf871081f7a3cde0e1033be38b)** · Built by [Ata Okuzcuoglu](https://linkedin.com/in/atakzcgl)
 
 ---
 
+## The Full Content Lifecycle — Covered
+
+```
+IDEATION → RESEARCH → CREATION → OPTIMIZATION → DISTRIBUTION → VISUALS
+   ✅         ✅         ✅           ✅              ✅           ✅
+
+ Trend     Data→      Pipeline    SEO Layer     Content      Carousel
+ Radar    Content    + Repurpose  + Quality     Chain        + AI Images
+                                   Scoring
+```
+
 ## Features
 
-### 🔧 Live Pipeline
-Paste text, import a URL, or upload a PDF/DOCX → get 4 channel-native outputs with tone and audience controls.
+| Tab | What It Does |
+|---|---|
+| 🔧 **Pipeline** | Text/URL/PDF/DOCX → 4 channel content (LinkedIn, Blog, Reddit, Email) |
+| 🔄 **Repurpose** | 1 article → 10 pieces (3 LinkedIn, X thread, blog, email, Reddit, carousel, newsletter, quotes) |
+| 🔍 **Trend Radar** | Enter industry → 8 trending topics with urgency, angles, hooks, channels |
+| 📊 **Data → Content** | Upload CSV/data → AI extracts insights → one-click to Pipeline |
+| 📦 **Showcase** | 3 industry demos (Apple, Healthcare, Manufacturing) — no API needed |
+| 🏗️ **How It Works** | Full architecture, feature map, roadmap |
 
-### 🔄 Repurpose Mode
-Drop a long blog post or article → get 10 different content pieces: 3 LinkedIn posts, X thread, short blog, email, Reddit thread, carousel outline, newsletter blurb, 3 quote cards.
-
-### 🧬 Brand Voice Cloning
-Upload 3-5 writing samples → AI extracts voice DNA (hook patterns, sentence style, signature phrases, tone markers) → every output matches that voice.
-
-### 📊 SEO Readiness (replaces $89/mo Surfer SEO)
-Every blog output gets instant analysis — zero API cost, pure Python:
-- SEO Score (0-100)
-- Flesch-Kincaid readability + grade level
-- Word count optimization check
-- Keyword extraction
-- Heading structure analysis
-- Auto-generated meta description (155 chars)
-
-### 🖼️ AI Visuals (free via Pollinations.ai)
-Blog headers, LinkedIn visuals, quote card backgrounds, carousel slides — auto-generated and downloadable as PNG.
-
-### 📈 Quality Scoring
-5-dimension scoring per output: hook strength, readability, specificity, channel fit, CTA clarity.
-
-### 📦 Export All
-Markdown bundle, content calendar, or plain text — download everything in one click.
-
-### 📄 Multi-Source Input
-Text, URL (auto-extract), PDF, DOCX, CSV, Markdown — drop anything in.
-
----
-
-## Architecture
-
-```
-INPUTS (Text, URL, PDF, DOCX)
-    │
-    ▼
-ANALYSIS → PARALLEL GENERATE → 4 OUTPUTS
-    │         + Voice Profile       │
-    │         + Tone/Audience       │
-    │                               ▼
-    │                          SEO ANALYSIS
-    │                          AI VISUALS
-    │                          QUALITY SCORE
-    │                               │
-    ▼                               ▼
-EXPORT (Markdown · Calendar · TXT · PNG)
-```
+### Plus
+- **🧬 Brand Voice Cloning** — upload writing samples → every output matches that voice
+- **📊 SEO Readiness** — Flesch-Kincaid, keywords, headings, meta description (pure Python, $0)
+- **🎠 Carousel Builder** — blog → 8 visual slides with gradient backgrounds
+- **🔗 Content Chain** — cross-linking + distribution strategy + timing
+- **🖼️ AI Visuals** — blog headers, LinkedIn visuals, quote cards (Pollinations.ai, $0)
+- **📈 Quality Scoring** — 5-dimension scoring per output
+- **📦 Export All** — Markdown bundle, content calendar, plain text, PNG images
 
 ---
 
@@ -76,12 +55,11 @@ streamlit run app.py
 | Component | Detail |
 |---|---|
 | Model | Claude Sonnet 4 |
-| SEO Analysis | Pure Python (Flesch-Kincaid, keyword extraction) |
+| SEO Analysis | Pure Python (Flesch-Kincaid, keyword extraction) — $0 |
 | AI Visuals | Pollinations.ai (free, no API key) |
 | URL Extraction | BeautifulSoup |
 | PDF/DOCX | PyPDF2, python-docx |
 | Framework | Streamlit |
-| Deployment | Streamlit Cloud |
 
 ---
 
