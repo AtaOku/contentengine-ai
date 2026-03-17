@@ -629,6 +629,23 @@ def render_image_with_fallback(url, caption="", width=None):
         return False
 
 
+def show_image_with_download(img_url, caption, key_suffix, filename="generated_image.png"):
+    """Show AI image + download button side by side."""
+    st.image(img_url, caption=caption, use_container_width=True)
+    try:
+        resp = requests.get(img_url, timeout=15)
+        if resp.status_code == 200:
+            st.download_button(
+                "⬇️ Download image",
+                resp.content,
+                file_name=filename,
+                mime="image/png",
+                key=f"dl_img_{key_suffix}"
+            )
+    except Exception:
+        st.markdown(f"[⬇️ Download image]({img_url})")
+
+
 def build_markdown_bundle(results, insight_text="", channel_labels=None):
     """Build a complete Markdown document with all generated content."""
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -1630,13 +1647,13 @@ with tab_pipeline:
                     if enable_images and ch == "blog":
                         img_prompt = get_blog_header_prompt(results[ch])
                         img_url = generate_image_url(img_prompt, width=1200, height=630, seed=42)
-                        st.image(img_url, caption="🖼️ AI-generated blog header (Pollinations.ai — free)", use_container_width=True)
+                        show_image_with_download(img_url, "🖼️ AI-generated blog header (free via Pollinations.ai)", "pipe_blog", "blog_header.png")
 
                     # AI-generated visual for LinkedIn
                     if enable_images and ch == "linkedin":
                         li_prompt = f"Professional LinkedIn post visual, abstract data visualization, corporate blue gradient, modern minimalist infographic style, no text, clean, editorial, 4k"
                         li_url = generate_image_url(li_prompt, width=1200, height=627, seed=77)
-                        st.image(li_url, caption="🖼️ AI-generated post visual (Pollinations.ai — free)", use_container_width=True)
+                        show_image_with_download(li_url, "🖼️ AI-generated post visual (free via Pollinations.ai)", "pipe_li", "linkedin_visual.png")
 
                     st.text_area(
                         f"{ch} output",
@@ -1832,11 +1849,11 @@ with tab_repurpose:
                         if enable_images:
                             if "blog" in fmt.lower():
                                 img_prompt = get_blog_header_prompt(content)
-                                st.image(generate_image_url(img_prompt, 1200, 630, seed=i*10), caption="🖼️ AI header", use_container_width=True)
+                                show_image_with_download(generate_image_url(img_prompt, 1200, 630, seed=i*10), "🖼️ AI header", f"rep_blog_{i}", f"blog_header_{i}.png")
                             elif "quote" in fmt.lower():
-                                st.image(generate_image_url(get_quote_card_prompt(content), 1080, 1080, seed=i*20), caption="🖼️ Quote card background", use_container_width=True)
+                                show_image_with_download(generate_image_url(get_quote_card_prompt(content), 1080, 1080, seed=i*20), "🖼️ Quote card background", f"rep_quote_{i}", f"quote_card_{i}.png")
                             elif "carousel" in fmt.lower():
-                                st.image(generate_image_url("Professional carousel slide background, clean gradient, modern geometric shapes, corporate style, no text, abstract, indigo and white, 4k", 1080, 1080, seed=i*30), caption="🖼️ Carousel slide background", use_container_width=True)
+                                show_image_with_download(generate_image_url("Professional carousel slide background, clean gradient, modern geometric shapes, corporate style, no text, abstract, indigo and white, 4k", 1080, 1080, seed=i*30), "🖼️ Carousel slide background", f"rep_carousel_{i}", f"carousel_slide_{i}.png")
 
                         # Use appropriate mockup for known formats
                         if "linkedin" in fmt.lower():
@@ -1926,11 +1943,11 @@ with tab_showcase:
         if enable_images and key == "blog":
             img_prompt = get_blog_header_prompt(demo_data[key])
             demo_seed = hash(selected_demo) % 1000
-            st.image(generate_image_url(img_prompt, 1200, 630, seed=demo_seed), caption="🖼️ AI-generated blog header", use_container_width=True)
+            show_image_with_download(generate_image_url(img_prompt, 1200, 630, seed=demo_seed), "🖼️ AI-generated blog header", f"sc_blog_{demo_seed}", "blog_header.png")
         elif enable_images and key == "linkedin":
             demo_seed = (hash(selected_demo) % 1000) + 100
             li_prompt = f"Professional thought leadership visual, abstract corporate infographic, modern gradient, editorial style, no text, 4k"
-            st.image(generate_image_url(li_prompt, 1200, 627, seed=demo_seed), caption="🖼️ AI-generated post visual", use_container_width=True)
+            show_image_with_download(generate_image_url(li_prompt, 1200, 627, seed=demo_seed), "🖼️ AI-generated post visual", f"sc_li_{demo_seed}", "linkedin_visual.png")
 
         renderer = MOCKUP_RENDERERS.get(key)
         if renderer:
