@@ -124,116 +124,8 @@ st.markdown("""
         margin-bottom: 0.75rem;
     }
 
-    /* Platform Mockups */
-    .linkedin-mockup {
-        background: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        overflow: hidden;
-        margin: 1rem 0;
-        font-family: -apple-system, system-ui, sans-serif;
-    }
-    .linkedin-header {
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .linkedin-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #0a66c2, #004182);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 700;
-        font-size: 18px;
-    }
-    .linkedin-meta { font-size: 0.85rem; }
-    .linkedin-name { font-weight: 600; color: #000; }
-    .linkedin-title { color: #666; font-size: 0.75rem; }
-    .linkedin-body { padding: 0 16px 16px; font-size: 0.9rem; line-height: 1.6; color: #333; white-space: pre-wrap; }
-    .linkedin-actions {
-        padding: 8px 16px;
-        border-top: 1px solid #e0e0e0;
-        display: flex;
-        justify-content: space-around;
-        color: #666;
-        font-size: 0.8rem;
-    }
-
-    .reddit-mockup {
-        background: #fff;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        overflow: hidden;
-        margin: 1rem 0;
-        font-family: -apple-system, system-ui, sans-serif;
-    }
-    .reddit-sidebar {
-        background: #f8f9fa;
-        padding: 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        float: left;
-        min-width: 40px;
-    }
-    .reddit-vote { color: #878a8c; font-size: 0.75rem; font-weight: 700; }
-    .reddit-vote-count { color: #1a1a1b; font-weight: 700; }
-    .reddit-content { padding: 8px 12px; }
-    .reddit-sub { font-size: 0.75rem; color: #787c7e; margin-bottom: 4px; }
-    .reddit-sub strong { color: #1c1c1c; }
-    .reddit-title-text { font-size: 1.1rem; font-weight: 600; color: #1a1a1b; margin-bottom: 8px; }
-    .reddit-body { font-size: 0.9rem; line-height: 1.5; color: #1a1a1b; white-space: pre-wrap; }
-    .reddit-footer { padding: 4px 12px 8px; font-size: 0.75rem; color: #878a8c; display: flex; gap: 12px; }
-
-    .email-mockup {
-        background: #fff;
-        border: 1px solid #dadce0;
-        border-radius: 8px;
-        overflow: hidden;
-        margin: 1rem 0;
-        font-family: -apple-system, system-ui, sans-serif;
-        max-width: 600px;
-    }
-    .email-toolbar {
-        background: #f2f2f2;
-        padding: 8px 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.8rem;
-        color: #5f6368;
-        border-bottom: 1px solid #dadce0;
-    }
-    .email-subject { padding: 12px 16px; font-size: 1rem; font-weight: 600; color: #202124; border-bottom: 1px solid #f0f0f0; }
-    .email-meta { padding: 8px 16px; font-size: 0.8rem; color: #5f6368; }
-    .email-body-content { padding: 16px; font-size: 0.9rem; line-height: 1.7; color: #202124; white-space: pre-wrap; }
-
-    .blog-mockup {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        overflow: hidden;
-        margin: 1rem 0;
-        font-family: 'Georgia', serif;
-    }
-    .blog-header-bar {
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        padding: 24px;
-    }
-    .blog-category { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: #818cf8; margin-bottom: 8px; }
-    .blog-headline { font-size: 1.4rem; font-weight: 700; color: #fff; line-height: 1.3; }
-    .blog-byline { font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 12px; }
-    .blog-body-content { padding: 24px; font-size: 0.95rem; line-height: 1.8; color: #374151; white-space: pre-wrap; }
-
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1079,16 +971,6 @@ def get_blog_header_prompt(blog_content):
 
 def get_quote_card_prompt(quote_text):
     return "dark gradient background, navy gold, minimal, abstract"
-
-
-def render_image_with_fallback(url, caption="", width=None):
-    """Render an image from URL with loading fallback."""
-    try:
-        st.image(url, caption=caption, use_container_width=True if not width else False, width=width)
-        return True
-    except Exception:
-        st.caption(f"🖼️ [View generated image]({url})")
-        return False
 
 
 def show_image_with_download(img_url, caption, key_suffix, filename="generated_image.png"):
