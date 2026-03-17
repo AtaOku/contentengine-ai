@@ -2,43 +2,63 @@
 
 **AI-powered content pipeline. One insight → four channels → under 60 seconds.**
 
-Not "use ChatGPT sometimes." A structured pipeline with Brand Voice Cloning, quality scoring, and format-specific prompt engineering.
+Drop in a raw signal — news, URL, PDF, customer quote — and get publish-ready LinkedIn posts, blog drafts, Reddit threads, and email sequences. With Brand Voice Cloning, SEO analysis, AI visuals, and quality scoring built in.
 
-Built by [Ata Okuzcuoglu](https://linkedin.com/in/atakzcgl) · [Live Demo](https://contentengine-ai.streamlit.app) · [Case Study](https://www.notion.so/326feccf871081f7a3cde0e1033be38b)
-
----
-
-## What It Does
-
-Drop in a raw signal — news article, competitor move, customer quote, PDF whitepaper, any URL — and get publish-ready content across four channels simultaneously:
-
-- **LinkedIn Post** — hook-first, thought leadership, hashtag strategy
-- **Blog Draft** — SEO-structured, subheadings, data-backed claims
-- **Reddit Thread** — peer-to-peer tone, zero promotion, community-native
-- **Email Sequence** — A/B subject lines, preview text, single CTA
-
-Each format has its own prompt engineering. The system prompt enforces domain expertise and anti-fluff rules. Messaging stays consistent across all four outputs.
+**[Live Demo](https://contentengine-ai.streamlit.app)** · **[Case Study](https://www.notion.so/326feccf871081f7a3cde0e1033be38b)** · Built by [Ata Okuzcuoglu](https://linkedin.com/in/atakzcgl)
 
 ---
 
-## Key Features
+## Features
+
+### 🔧 Live Pipeline
+Paste text, import a URL, or upload a PDF/DOCX → get 4 channel-native outputs with tone and audience controls.
+
+### 🔄 Repurpose Mode
+Drop a long blog post or article → get 10 different content pieces: 3 LinkedIn posts, X thread, short blog, email, Reddit thread, carousel outline, newsletter blurb, quote cards.
 
 ### 🧬 Brand Voice Cloning
-Upload 3-5 writing samples (CEO's LinkedIn posts, company blog, team emails) → AI extracts a Brand Voice Profile: hook patterns, sentence style, signature phrases, tone markers, structural preferences. Every output matches that voice.
+Upload 3-5 writing samples → AI extracts voice DNA (hook patterns, sentence style, signature phrases, tone markers). Every output matches that voice.
+
+### 📊 SEO Readiness Analysis
+Every blog output gets instant SEO scoring — pure Python, zero API cost:
+- Flesch-Kincaid readability + grade level
+- Word count optimization check
+- Keyword extraction (frequency-based)
+- Heading structure analysis (H1/H2/H3)
+- Auto-generated meta description (155 chars)
+- Composite SEO score (0-100)
+
+Replaces what Surfer SEO charges $89/month for.
+
+### 🖼️ AI Visuals
+Auto-generated images via Pollinations.ai (free, no API key):
+- Blog header images (1200×630)
+- LinkedIn post visuals
+- Quote card backgrounds
+- Carousel slide backgrounds
+- All downloadable as PNG
 
 ### 📈 Content Quality Scoring
-Each output gets scored on 5 dimensions: hook strength, readability, specificity, channel fit, CTA clarity. Overall score (1-10) with color coding and a single top improvement suggestion per piece.
+5-dimension scoring per output: hook strength, readability, specificity, channel fit, CTA clarity. With improvement suggestions.
 
-### 📄 Multi-Source Input
-- **Text / Paste** — raw text, headlines, quotes
-- **URL Import** — auto-extracts article content (BeautifulSoup)
-- **PDF Upload** — whitepapers, press releases, reports (PyPDF2)
-- **DOCX Upload** — briefs, meeting notes (python-docx)
-- **CSV / TXT / Markdown** — data exports, research notes
+### 📦 Export All
+- Markdown Bundle (.md)
+- Content Calendar (weekday assignments + previews)
+- Plain Text (copy-paste ready)
 
-### 🎨 Tone & Audience Controls
-- **5 Tone Presets:** Thought Leadership · Provocative · Data-Driven · Conversational · Educational
-- **5 Audience Presets:** C-Suite · Ops/Engineering · Marketing · Domain Expert · General
+---
+
+## Industry Showcase
+
+Pre-generated demos across 3 industries — no API key needed:
+
+| Demo | Topic |
+|---|---|
+| 🍎 Tech | Apple's AI strategy is failing — control culture vs AI speed |
+| 🏥 Healthcare | GLP-1 drugs disrupting 6+ industries beyond obesity |
+| 🏭 Manufacturing | $200B reshoring wave with no workers to fill it |
+
+Each demo shows platform-native mockups: LinkedIn cards, Reddit threads, email inboxes, blog layouts.
 
 ---
 
@@ -47,25 +67,22 @@ Each output gets scored on 5 dimensions: hook strength, readability, specificity
 ```
 INPUTS (Text, URL, PDF, DOCX, CSV)
         │
-        ▼
-   ┌─────────┐     ┌──────────────┐     ┌─────────────────────┐
-   │ EXTRACT  │────→│   ANALYSIS   │────→│  PARALLEL GENERATE  │
-   │ CONTENT  │     │  Core angle  │     │  + Voice + Tone     │
-   └─────────┘     │  Pain point  │     │                     │
-                    │  Hooks       │     │  ├─ LinkedIn Post    │
-   ┌─────────┐     │  Why now?    │     │  ├─ Blog Draft       │
-   │ BRAND   │     └──────────────┘     │  ├─ Reddit Thread    │
-   │ VOICE   │───────────────────────→  │  └─ Email Sequence   │
-   └─────────┘                          └─────────────────────┘
-   ┌─────────┐                                    │
-   │ TONE +  │──────────────────────────────────→ │
-   │AUDIENCE │                              ┌─────┴─────┐
-   └─────────┘                              │  SCORING   │
-                                            │  5-dim     │
-                                            └───────────┘
+   ┌────┴────┐
+   │ EXTRACT  │──→ ANALYSIS ──→ PARALLEL GENERATE
+   │ CONTENT  │    (angles,     (4 channels +
+   └─────────┘     hooks,        voice + tone)
+                    pain)              │
+   ┌─────────┐                   ┌────┴────┐
+   │ BRAND   │──────────────────→│ OUTPUTS │
+   │ VOICE   │                   │ + SEO   │
+   └─────────┘                   │ + SCORE │
+   ┌─────────┐                   │ + IMAGE │
+   │ TONE +  │──────────────────→│         │
+   │AUDIENCE │                   └─────────┘
+   └─────────┘
 ```
 
-**5-Layer Prompt Architecture:** System Prompt (domain) → Analysis (JSON extraction) → Format Prompts (channel) → Context Injection (company) → Voice Profile (brand DNA)
+**5-Layer Prompt Architecture:** System Prompt → Analysis → Format Prompts → Context Injection → Voice Profile
 
 ---
 
@@ -76,21 +93,23 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Add your Claude API key in the sidebar. Choose an input method and run.
+For public deployment: add `ANTHROPIC_API_KEY` to Streamlit Secrets.
 
 ---
 
-## Why This Isn't a ChatGPT Wrapper
+## Tech Stack
 
-| ChatGPT Wrapper | ContentEngine |
+| Component | Detail |
 |---|---|
-| Single prompt → generic output | 5-layer prompt architecture |
-| Manual rewrite per channel | 4 channel-native outputs simultaneously |
-| No brand consistency | Brand Voice Cloning from samples |
-| No quality feedback | 5-dimension quality scoring |
-| Text input only | URL, PDF, DOCX, CSV auto-extraction |
-| Same tone every time | Tone + Audience controls per run |
+| Model | Claude Sonnet 4 |
+| Framework | Streamlit |
+| SEO Analysis | Pure Python (Flesch-Kincaid, keyword extraction) |
+| URL Extraction | BeautifulSoup |
+| PDF Processing | PyPDF2 |
+| DOCX Processing | python-docx |
+| AI Visuals | Pollinations.ai (free) |
+| Deployment | Streamlit Cloud |
 
 ---
 
-*Part of the [MarTech × AI Portfolio](https://www.notion.so/30ffeccf87108174a30cd60449aebaf3) — demonstrating the intersection of marketing domain expertise and AI engineering.*
+*Part of the [MarTech × AI Portfolio](https://www.notion.so/30ffeccf87108174a30cd60449aebaf3)*
