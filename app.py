@@ -2048,7 +2048,7 @@ st.markdown("""
     <div class="hero-subtitle">
         Paste an insight, drop a URL, or upload a doc — get publish-ready content for LinkedIn, your blog, Reddit, and email. All at once.
     </div>
-    <div class="hero-badge">Trend Radar · Pipeline · Repurpose · Data→Content · Voice Cloning · SEO · Carousel · AI Visuals</div>
+    <div class="hero-badge">Pipeline · Repurpose · Discover · Carousel · SEO · Voice Cloning · AI Visuals</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -2064,8 +2064,9 @@ if is_first_run:
         <strong>Build your own:</strong><br>
         <strong>1.</strong> <strong>Pipeline</strong> → paste text, a URL, or upload a file → get LinkedIn, blog, Reddit, and email in 60 seconds<br>
         <strong>2.</strong> <strong>Repurpose</strong> → drop a long article → get 10 platform-specific pieces<br>
-        <strong>3.</strong> <strong>Trend Radar</strong> → enter your industry → discover what to write about this week<br>
-        <strong>4.</strong> <strong>Data → Content</strong> → upload CSV/data → AI extracts story angles<br><br>
+        <strong>3.</strong> <strong>Discover</strong> → scan trends or upload data → find what to write about this week<br>
+        <strong>4.</strong> <strong>Carousel</strong> → turn any text into 8 visual LinkedIn/Instagram slides<br>
+        <strong>5.</strong> <strong>Toolkit</strong> → SEO analysis, brand voice cloning, insight analysis — all standalone<br><br>
         <strong>💡 Pro tip:</strong> Set your company context in the sidebar (left) — it gets woven into every output.
     </div>
 </div>
@@ -2078,13 +2079,13 @@ else:
 </div>
 """, unsafe_allow_html=True)
 
-tab_pipeline, tab_repurpose, tab_trends, tab_data, tab_showcase, tab_architecture = st.tabs([
+tab_pipeline, tab_repurpose, tab_discover, tab_carousel, tab_toolkit, tab_showcase = st.tabs([
     "🔧 Pipeline",
     "🔄 Repurpose",
-    "🔍 Trend Radar",
-    "📊 Data → Content",
-    "📦 Showcase",
-    "🏗️ How It Works"
+    "🔍 Discover",
+    "🎠 Carousel",
+    "🧰 Toolkit",
+    "📦 Showcase"
 ])
 
 
@@ -2694,62 +2695,72 @@ with tab_repurpose:
                         )
 
 
-# ─── TAB 3: Trend Radar ──────────────────────────────────────
-with tab_trends:
+# ─── TAB 3: Discover (Trend Radar + Data → Content) ──────────
+with tab_discover:
     st.markdown("""
-    ### 🔍 Trend Radar — What Should You Write About This Week?
+    ### 🔍 Discover — Find What to Write About
 
-    Enter your industry. AI scans for trending topics, emerging conversations,
-    and content opportunities — with ready-to-use hooks and channel recommendations.
+    Don't know what to write? Two ways to find your next content topic:
+    **Trend Radar** scans your industry for what's hot this week.
+    **Data → Content** extracts story angles from your numbers.
     """)
 
-    col_ind, col_ctx = st.columns([1, 1])
-    with col_ind:
-        trend_industry = st.text_input(
-            "Your industry/niche:",
-            placeholder="e.g., B2B SaaS, Healthcare, Manufacturing, Fintech, E-commerce...",
-            key="trend_industry"
-        )
-    with col_ctx:
-        trend_context = st.text_input(
-            "Your company (optional):",
-            placeholder="e.g., Connected worker platform for factories",
-            key="trend_context"
-        )
+    discover_mode = st.radio(
+        "Discovery method:",
+        ["🔍 Trend Radar", "📊 Data → Content"],
+        horizontal=True,
+        key="discover_mode"
+    )
 
-    if st.button("🔍 Scan for Trends", type="primary", use_container_width=True, key="scan_trends"):
-        if not trend_industry.strip():
-            st.warning("Enter your industry to scan for trends.")
-        elif not has_api_key():
-            st.warning("API key required.")
-        else:
-            client = get_client()
-            if client:
-                st.session_state.setdefault("run_timestamps", []).append(time.time())
+    if discover_mode == "🔍 Trend Radar":
+        st.markdown("#### 🔍 Trend Radar — What's trending in your industry?")
+        col_ind, col_ctx = st.columns([1, 1])
+        with col_ind:
+            trend_industry = st.text_input(
+                "Your industry/niche:",
+                placeholder="e.g., B2B SaaS, Healthcare, Manufacturing, Fintech, E-commerce...",
+                key="trend_industry"
+            )
+        with col_ctx:
+            trend_context = st.text_input(
+                "Your company (optional):",
+                placeholder="e.g., Connected worker platform for factories",
+                key="trend_context"
+            )
 
-                with st.status("🔍 Scanning trending topics...", expanded=True) as status:
-                    st.write("Analyzing industry conversations...")
-                    st.write("Identifying content opportunities...")
-                    trends_data, err = scan_trends(client, trend_industry, trend_context or context)
+        if st.button("🔍 Scan for Trends", type="primary", use_container_width=True, key="scan_trends"):
+            if not trend_industry.strip():
+                st.warning("Enter your industry to scan for trends.")
+            elif not has_api_key():
+                st.warning("API key required.")
+            else:
+                client = get_client()
+                if client:
+                    st.session_state.setdefault("run_timestamps", []).append(time.time())
 
-                    if err:
-                        status.update(label="❌ Error", state="error")
-                        st.error(err)
-                    elif trends_data:
-                        status.update(label=f"✅ Found {len(trends_data.get('trends', []))} trending topics", state="complete")
+                    with st.status("🔍 Scanning trending topics...", expanded=True) as status:
+                        st.write("Analyzing industry conversations...")
+                        st.write("Identifying content opportunities...")
+                        trends_data, err = scan_trends(client, trend_industry, trend_context or context)
 
-                if trends_data:
-                    st.markdown("---")
+                        if err:
+                            status.update(label="❌ Error", state="error")
+                            st.error(err)
+                        elif trends_data:
+                            status.update(label=f"✅ Found {len(trends_data.get('trends', []))} trending topics", state="complete")
 
-                    for i, trend in enumerate(trends_data.get("trends", []), 1):
-                        urgency = trend.get("urgency", "medium")
-                        urgency_colors = {"high": "#ef4444", "medium": "#f59e0b", "low": "#22c55e"}
-                        u_color = urgency_colors.get(urgency, "#f59e0b")
+                    if trends_data:
+                        st.markdown("---")
 
-                        channels_str = " · ".join(trend.get("best_channels", []))
-                        angles_html = "<br>".join([f"→ {a}" for a in trend.get("content_angles", [])])
+                        for i, trend in enumerate(trends_data.get("trends", []), 1):
+                            urgency = trend.get("urgency", "medium")
+                            urgency_colors = {"high": "#ef4444", "medium": "#f59e0b", "low": "#22c55e"}
+                            u_color = urgency_colors.get(urgency, "#f59e0b")
 
-                        st.markdown(f"""
+                            channels_str = " · ".join(trend.get("best_channels", []))
+                            angles_html = "<br>".join([f"→ {a}" for a in trend.get("content_angles", [])])
+
+                            st.markdown(f"""
 <div class="content-card" style="border-left:4px solid {u_color};">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <div class="card-label">#{i} · {trend.get('title', 'Trend')}</div>
@@ -2761,82 +2772,74 @@ with tab_trends:
     <div style="font-size:0.8rem; color:#64748b;"><strong>Best channels:</strong> {channels_str}</div>
 </div>""", unsafe_allow_html=True)
 
-                        # Ready-to-use hook
-                        hook = trend.get("sample_hook", "")
-                        if hook:
-                            with st.expander(f"📋 Ready-to-use hook for #{i}"):
-                                st.code(hook, language=None)
+                            # Ready-to-use hook
+                            hook = trend.get("sample_hook", "")
+                            if hook:
+                                with st.expander(f"📋 Ready-to-use hook for #{i}"):
+                                    st.code(hook, language=None)
 
-                    st.info("💡 **Tip:** Copy a trend summary and paste it into the Pipeline tab to generate full content across 4 channels.")
+                        st.info("💡 **Tip:** Copy a trend summary and paste it into the Pipeline tab to generate full content across 4 channels.")
 
+    else:  # Data → Content
+        st.markdown("#### 📊 Data → Content — Turn numbers into narratives")
 
-# ─── TAB 4: Data → Content ────────────────────────────────────
-with tab_data:
-    st.markdown("""
-    ### 📊 Data → Content — Turn Numbers into Narratives
-
-    Upload a CSV, spreadsheet export, or paste raw data. AI extracts the key insights
-    and turns them into content angles — with headlines and audience suggestions.
-    """)
-
-    data_input_mode = st.radio(
-        "Data source:",
-        ["📋 Paste data", "📄 Upload CSV/file"],
-        horizontal=True,
-        key="data_input_mode"
-    )
-
-    data_text = ""
-    if data_input_mode == "📄 Upload CSV/file":
-        data_file = st.file_uploader("Upload data file:", type=["csv", "txt", "md", "xlsx"], key="data_file")
-        if data_file:
-            if data_file.name.endswith(".csv") or data_file.name.endswith(".txt") or data_file.name.endswith(".md"):
-                data_text = data_file.read().decode("utf-8", errors="ignore")
-                # Truncate
-                lines = data_text.split("\n")
-                if len(lines) > 150:
-                    data_text = "\n".join(lines[:150]) + f"\n[...truncated, {len(lines)} total rows]"
-                st.success(f"Loaded {len(lines)} rows")
-            else:
-                st.warning("For Excel files (.xlsx), export as CSV first for best results.")
-    else:
-        data_text = st.text_area(
-            "Paste your data:",
-            placeholder="Paste CSV data, survey results, metrics, KPIs, or any structured data...\n\ne.g.:\nMonth,Revenue,Churn Rate,NPS\nJan,120000,3.2%,45\nFeb,135000,2.8%,52\nMar,128000,3.5%,41",
-            height=200,
-            key="data_paste"
+        data_input_mode = st.radio(
+            "Data source:",
+            ["📋 Paste data", "📄 Upload CSV/file"],
+            horizontal=True,
+            key="data_input_mode"
         )
 
-    if data_text:
-        st.caption(f"Data preview: {len(data_text.split(chr(10)))} rows loaded")
+        data_text = ""
+        if data_input_mode == "📄 Upload CSV/file":
+            data_file = st.file_uploader("Upload data file:", type=["csv", "txt", "md", "xlsx"], key="data_file")
+            if data_file:
+                if data_file.name.endswith(".csv") or data_file.name.endswith(".txt") or data_file.name.endswith(".md"):
+                    data_text = data_file.read().decode("utf-8", errors="ignore")
+                    lines = data_text.split("\n")
+                    if len(lines) > 150:
+                        data_text = "\n".join(lines[:150]) + f"\n[...truncated, {len(lines)} total rows]"
+                    st.success(f"Loaded {len(lines)} rows")
+                else:
+                    st.warning("For Excel files (.xlsx), export as CSV first for best results.")
+        else:
+            data_text = st.text_area(
+                "Paste your data:",
+                placeholder="Paste CSV data, survey results, metrics, KPIs, or any structured data...\n\ne.g.:\nMonth,Revenue,Churn Rate,NPS\nJan,120000,3.2%,45\nFeb,135000,2.8%,52\nMar,128000,3.5%,41",
+                height=200,
+                key="data_paste"
+            )
 
-    col_analyze, col_generate = st.columns(2)
+        if data_text:
+            st.caption(f"Data preview: {len(data_text.split(chr(10)))} rows loaded")
 
-    with col_analyze:
-        if st.button("🔍 Extract Insights", type="primary", use_container_width=True, key="extract_insights"):
-            if not data_text.strip():
-                st.warning("Add some data first.")
-            elif not has_api_key():
-                st.warning("API key required.")
-            else:
-                client = get_client()
-                if client:
-                    st.session_state.setdefault("run_timestamps", []).append(time.time())
+        col_analyze, col_generate = st.columns(2)
 
-                    with st.spinner("📊 Analyzing data patterns..."):
-                        insights, err = analyze_data_for_content(client, data_text, context)
+        with col_analyze:
+            if st.button("🔍 Extract Insights", type="primary", use_container_width=True, key="extract_insights"):
+                if not data_text.strip():
+                    st.warning("Add some data first.")
+                elif not has_api_key():
+                    st.warning("API key required.")
+                else:
+                    client = get_client()
+                    if client:
+                        st.session_state.setdefault("run_timestamps", []).append(time.time())
 
-                    if err:
-                        st.error(err)
-                    elif insights:
-                        st.session_state["data_insights"] = insights
-                        st.markdown("---")
-                        st.markdown(f"**Dataset:** {insights.get('data_summary', 'Analyzed')}")
-                        st.markdown(f"**Overall narrative:** {insights.get('overall_narrative', '')}")
-                        st.markdown("---")
+                        with st.spinner("📊 Analyzing data patterns..."):
+                            insights, err = analyze_data_for_content(client, data_text, context)
 
-                        for j, ins in enumerate(insights.get("insights", []), 1):
-                            st.markdown(f"""
+                        if err:
+                            st.error(err)
+                        elif insights:
+                            st.session_state["data_insights"] = insights
+                            st.markdown("---")
+                            st.markdown(f"**Dataset:** {insights.get('data_summary', 'Analyzed')}")
+                            st.markdown(f"**Overall narrative:** {insights.get('overall_narrative', '')}")
+                            st.markdown("---")
+
+                            for j, ins in enumerate(insights.get("insights", []), 1):
+                                st.markdown(f"""
 <div class="content-card">
     <div class="card-label">Insight #{j}: {ins.get('insight', '')}</div>
     <div style="font-size:0.85rem; margin-bottom:6px;"><strong>📊 Evidence:</strong> {ins.get('data_evidence', '')}</div>
@@ -2845,21 +2848,256 @@ with tab_data:
     <div style="font-size:0.8rem; color:#64748b;"><strong>🎯 Audience:</strong> {ins.get('target_audience', '')}</div>
 </div>""", unsafe_allow_html=True)
 
-                        st.info("💡 **Next step:** Copy an insight headline and paste it into the Pipeline tab to generate full content.")
+                            st.info("💡 **Next step:** Copy an insight headline and paste it into the Pipeline tab to generate full content.")
 
-    with col_generate:
-        if st.button("⚡ Insight → Full Content", use_container_width=True, key="insight_to_content",
-                     help="Takes the top insight and runs it through the 4-channel pipeline"):
-            insights = st.session_state.get("data_insights")
-            if insights and insights.get("insights"):
-                top = insights["insights"][0]
-                st.session_state["prefill_insight"] = f"{top.get('headline_suggestion', '')}. {top.get('insight', '')} Evidence: {top.get('data_evidence', '')}. {top.get('story_angle', '')}"
-                st.info(f"✅ Top insight loaded! Switch to the **Pipeline** tab to generate content.")
+        with col_generate:
+            if st.button("⚡ Insight → Full Content", use_container_width=True, key="insight_to_content",
+                         help="Takes the top insight and runs it through the 4-channel pipeline"):
+                insights = st.session_state.get("data_insights")
+                if insights and insights.get("insights"):
+                    top = insights["insights"][0]
+                    st.session_state["prefill_insight"] = f"{top.get('headline_suggestion', '')}. {top.get('insight', '')} Evidence: {top.get('data_evidence', '')}. {top.get('story_angle', '')}"
+                    st.info(f"✅ Top insight loaded! Switch to the **Pipeline** tab to generate content.")
+                else:
+                    st.warning("Extract insights first (click the button on the left).")
+
+
+# ─── TAB 4: Carousel Builder (Standalone) ─────────────────────
+with tab_carousel:
+    st.markdown("""
+    ### 🎠 Carousel Builder — Any Text → 8 Visual Slides
+
+    Paste any text — a blog post, a set of talking points, a product description — and get
+    a ready-to-post LinkedIn/Instagram carousel with 8 slides.
+    """)
+
+    car_input_mode = st.radio(
+        "Source content:",
+        ["✍️ Paste text", "🔗 URL", "📄 Upload File"],
+        horizontal=True,
+        key="car_input_mode"
+    )
+
+    car_text = ""
+    if car_input_mode == "🔗 URL":
+        car_url = st.text_input("Article URL:", placeholder="https://...", key="car_url")
+        if car_url:
+            with st.spinner("🔗 Fetching..."):
+                fetched, err = fetch_url_content(car_url)
+            if err:
+                st.error(err)
+            elif fetched:
+                st.success(f"Extracted {len(fetched.split())} words")
+                car_text = st.text_area("Source content (edit if needed):", value=fetched, height=200, key="car_fetched")
+
+    elif car_input_mode == "📄 Upload File":
+        car_file = st.file_uploader("Upload source content:", type=["pdf", "txt", "md", "csv", "docx"], key="car_file")
+        if car_file:
+            with st.spinner(f"📄 Extracting from {car_file.name}..."):
+                file_text, err = extract_file_content(car_file)
+            if err:
+                st.error(err)
+            elif file_text:
+                st.success(f"Extracted {len(file_text.split())} words")
+                car_text = st.text_area("Source content (edit if needed):", value=file_text, height=200, key="car_file_text")
+    else:
+        car_text = st.text_area(
+            "Paste your content:",
+            placeholder="Paste a blog post, talking points, product description, or any content you want to turn into a visual carousel...",
+            height=200,
+            key="car_paste"
+        )
+
+    if st.button("🎠 Build Carousel (8 Slides)", type="primary", use_container_width=True, key="car_standalone_run"):
+        if not car_text.strip():
+            st.warning("Please add some source content first.")
+        elif not has_api_key():
+            st.warning("API key required.")
+        elif len(st.session_state.get("run_timestamps", [])) >= 10:
+            st.error("Daily limit reached. Come back tomorrow.")
+        else:
+            client = get_client()
+            if client:
+                st.session_state.setdefault("run_timestamps", []).append(time.time())
+
+                with st.status("🎠 Building carousel slides...", expanded=True) as status:
+                    st.write("Analyzing content for key points...")
+                    st.write("Designing 8-slide narrative arc...")
+                    car_data, car_err = generate_carousel(client, car_text)
+
+                    if car_err:
+                        status.update(label="❌ Error", state="error")
+                        st.error(car_err)
+                    elif car_data:
+                        status.update(label=f"✅ Generated {len(car_data.get('slides', []))} slides", state="complete")
+
+                if car_data:
+                    st.markdown("---")
+                    st.markdown("#### 🎠 Your Carousel")
+
+                    slides = car_data.get("slides", [])
+                    for row_start in range(0, len(slides), 2):
+                        cols_c = st.columns(2)
+                        for ci, si in enumerate(range(row_start, min(row_start + 2, len(slides)))):
+                            with cols_c[ci]:
+                                st.markdown(render_carousel_slide(slides[si], seed=si + 100), unsafe_allow_html=True)
+
+                    # Download
+                    slides_text = "\n\n".join([
+                        f"--- SLIDE {s.get('slide_number', i)} ({s.get('type', 'content')}) ---\nHeadline: {s.get('headline', '')}\nBody: {s.get('body', '')}"
+                        for i, s in enumerate(slides, 1)
+                    ])
+                    st.download_button("📦 Download Carousel Script", slides_text,
+                        file_name=f"carousel_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                        mime="text/plain", key="dl_car_standalone")
+
+                    st.info("💡 **Tip:** Each slide is designed as a 1:1 square for LinkedIn/Instagram. Copy the script and create visuals in Canva or Figma.")
+
+
+# ─── TAB 5: Toolkit (SEO + Brand Voice + Insight Analysis) ───
+with tab_toolkit:
+    st.markdown("""
+    ### 🧰 Toolkit — Standalone Analysis Tools
+
+    Three tools, each with its own input. No Pipeline needed.
+    """)
+
+    toolkit_mode = st.radio(
+        "Select tool:",
+        ["📊 SEO Analysis", "🎙️ Brand Voice", "🔬 Insight Analysis"],
+        horizontal=True,
+        key="toolkit_mode"
+    )
+
+    if toolkit_mode == "📊 SEO Analysis":
+        st.markdown("#### 📊 SEO Readiness — Paste any text, get a free SEO report")
+        st.caption("Pure Python analysis — zero API cost. Checks word count, readability, keywords, heading structure, and generates a meta description.")
+
+        seo_text = st.text_area(
+            "Paste blog post or article text:",
+            placeholder="Paste any blog post, article, or long-form content to analyze its SEO readiness...",
+            height=250,
+            key="toolkit_seo_text"
+        )
+        seo_keyword = st.text_input("🎯 Target keyword (optional):",
+            placeholder="e.g., content marketing strategy, AI in manufacturing",
+            key="toolkit_seo_kw")
+
+        if st.button("📊 Analyze SEO", type="primary", use_container_width=True, key="toolkit_seo_run"):
+            if not seo_text.strip():
+                st.warning("Paste some text to analyze.")
             else:
-                st.warning("Extract insights first (click the button on the left).")
+                seo = seo_analyze(seo_text, target_keyword=seo_keyword)
+                st.markdown(render_seo_panel(seo), unsafe_allow_html=True)
+
+                with st.expander("📋 Copy meta description"):
+                    st.code(seo["meta_description"], language=None)
+
+    elif toolkit_mode == "🎙️ Brand Voice":
+        st.markdown("#### 🎙️ Brand Voice Cloning — Extract voice DNA from writing samples")
+        st.caption("Upload or paste 3-5 writing samples. The AI extracts sentence style, hook patterns, tone markers, and signature phrases. The profile is saved for your session and applied to all Pipeline/Repurpose outputs.")
+
+        voice_input_method = st.radio("Voice samples via:", ["Paste text", "Upload file"], horizontal=True, key="toolkit_voice_method")
+
+        if voice_input_method == "Paste text":
+            tk_voice_samples = st.text_area(
+                "Paste 3-5 writing samples (posts, emails, blog excerpts)",
+                placeholder="Paste the CEO's LinkedIn posts, company blog excerpts, or any writing samples that represent the target voice...",
+                height=200,
+                key="toolkit_voice_samples"
+            )
+        else:
+            tk_voice_file = st.file_uploader("Upload samples", type=["txt", "md", "pdf", "docx"], key="toolkit_voice_file")
+            tk_voice_samples = ""
+            if tk_voice_file:
+                file_content, err = extract_file_content(tk_voice_file)
+                if file_content:
+                    tk_voice_samples = file_content
+                    st.success(f"Extracted {len(file_content.split())} words")
+                elif err:
+                    st.error(err)
+
+        if tk_voice_samples and st.button("🧬 Extract Voice DNA", type="primary", key="toolkit_extract_voice"):
+            client = get_client()
+            if client:
+                with st.spinner("🧬 Analyzing writing patterns..."):
+                    profile, err = extract_brand_voice(client, tk_voice_samples)
+                if profile:
+                    st.session_state["voice_profile"] = profile
+                    st.success("Brand voice profile extracted and saved for this session!")
+                    st.markdown("---")
+                    st.markdown(f"**Summary:** {profile.get('voice_summary', 'N/A')}")
+                    st.markdown(f"**Hook Pattern:** {profile.get('hook_pattern', 'N/A')}")
+                    st.markdown(f"**Sentence Style:** {profile.get('sentence_style', 'N/A')}")
+                    st.markdown(f"**Tone:** {profile.get('tone_markers', 'N/A')}")
+                    phrases = profile.get('signature_phrases', [])
+                    if phrases:
+                        st.markdown(f"**Signature Phrases:** {', '.join(phrases)}")
+                    st.markdown(f"**Avoids:** {profile.get('what_they_avoid', 'N/A')}")
+                    st.markdown(f"**Mimicry Instructions:** {profile.get('mimicry_instructions', 'N/A')}")
+                elif err:
+                    st.error(err)
+            else:
+                st.warning("API key required. Add it in the sidebar.")
+
+        if "voice_profile" in st.session_state:
+            st.markdown("---")
+            st.markdown(f"✅ **Voice loaded:** {st.session_state['voice_profile'].get('tone_markers', 'Custom')[:60]}")
+            st.caption("This voice profile will be applied to all Pipeline and Repurpose outputs. Enable 'Brand Voice Cloning' in the sidebar.")
+            if st.button("🗑️ Clear Voice Profile", key="toolkit_clear_voice"):
+                del st.session_state["voice_profile"]
+                st.rerun()
+
+    else:  # Insight Analysis
+        st.markdown("#### 🔬 Insight Analysis — Extract content potential from any text")
+        st.caption("Paste any text — a news headline, a competitor move, a customer quote. Get the core angle, audience pain point, contrarian take, hooks, and channel recommendations.")
+
+        analysis_text = st.text_area(
+            "Raw insight to analyze:",
+            placeholder="Paste a headline, press release, customer quote, competitor announcement, or any raw signal...",
+            height=150,
+            key="toolkit_analysis_text"
+        )
+
+        if st.button("🔬 Analyze Insight", type="primary", use_container_width=True, key="toolkit_analysis_run"):
+            if not analysis_text.strip():
+                st.warning("Paste some text to analyze.")
+            elif not has_api_key():
+                st.warning("API key required.")
+            else:
+                client = get_client()
+                if client:
+                    st.session_state.setdefault("run_timestamps", []).append(time.time())
+
+                    with st.spinner("🔬 Analyzing content potential..."):
+                        analysis = analyze_insight(client, analysis_text, context)
+
+                    if analysis:
+                        st.markdown("---")
+                        st.markdown(f"""
+<div class="analysis-card">
+    <div class="analysis-title">📊 Content Analysis</div>
+    <p><strong>Core Angle:</strong> {analysis.get('core_angle', 'N/A')}</p>
+    <p><strong>Audience Pain:</strong> {analysis.get('audience_pain', 'N/A')}</p>
+    <p><strong>Contrarian Take:</strong> {analysis.get('contrarian_take', 'N/A')}</p>
+    <p><strong>Why Now:</strong> {analysis.get('trending_relevance', 'N/A')}</p>
+</div>""", unsafe_allow_html=True)
+                        hooks = analysis.get('content_hooks', [])
+                        if hooks:
+                            st.markdown("**Content Hooks:**")
+                            for h in hooks:
+                                st.markdown(f"- {h}")
+
+                        channels = analysis.get('suggested_channels', [])
+                        if channels:
+                            st.markdown(f"**Best Channels:** {', '.join(channels)}")
+
+                        st.info("💡 **Next step:** Copy the core angle and paste it into the Pipeline tab to generate full content.")
+                    else:
+                        st.warning("Analysis failed. Try different text.")
 
 
-# ─── TAB 5: Industry Showcase ─────────────────────────────────
+# ─── TAB 6: Industry Showcase ─────────────────────────────────
 with tab_showcase:
     st.markdown("""
     ### 📦 See It in Action
@@ -2964,105 +3202,3 @@ with tab_showcase:
         st.markdown("---")
 
     st.info("💡 **Same insight → 4 channels + carousel + distribution plan.** Switch industries above to compare. Then try it yourself in the Pipeline tab.")
-
-
-# ─── TAB 4: Architecture ─────────────────────────────────────
-with tab_architecture:
-    st.markdown("""
-    ### 🏗️ How ContentEngine Works
-
-    A **structured pipeline** with domain-specific prompt engineering,
-    brand voice cloning, and multi-source content extraction.
-    """)
-
-    st.markdown("---")
-
-    st.markdown("#### Pipeline Flow")
-    st.code("""
-    ┌─────────────────┐     ┌──────────────┐     ┌─────────────────────┐
-    │     INPUTS       │     │   ANALYSIS   │     │   BATCH GENERATE    │
-    │                  │     │  (1 API call) │     │   (1 API call)      │
-    │  ✍️ Text/Paste    │────→│              │────→│                     │
-    │  🔗 URL Import   │     │  Extracts:   │     │  Analysis feeds     │
-    │  📄 PDF Upload   │     │  · Core angle │     │  all 4 channels:    │
-    │  📎 DOCX/CSV     │     │  · Pain point │     │                     │
-    └─────────────────┘     │  · Hooks      │     │  ├─ LinkedIn Post   │
-                             │  · Why now    │     │  ├─ Blog Draft      │
-    ┌──────────────┐         └──────────────┘     │  ├─ Reddit Thread   │
-    │ KNOWLEDGE    │               │               │  └─ Email Sequence  │
-    │ BASE         │               │               └─────────────────────┘
-    │ · Company    │               │                        │
-    │ · Industry   │               ▼                   ┌────┴────┐
-    │ · Audience   │────→  Consistent narrative  ←────│ OPTIMIZE │
-    │ · Competitors│         across all channels       │ SEO+Score│
-    │ · Voice DNA  │                                   └─────────┘
-    └──────────────┘       Total: 2 API calls (was 5)
-    """, language=None)
-
-    st.markdown("---")
-
-    st.markdown("#### Prompt-and-Pray vs. ContentEngine")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        **❌ Typical AI Content**
-        - "What should I write?" → guess
-        - Paste into ChatGPT → generic output
-        - Manually rewrite per channel
-        - No brand voice
-        - No SEO analysis
-        - No data-driven insights
-        - No distribution strategy
-        """)
-    with col2:
-        st.markdown("""
-        **✅ ContentEngine**
-        - Trend Radar finds topics for you
-        - Data → Content extracts insights from CSV
-        - 4 channels generated simultaneously
-        - Brand Voice Cloning matches anyone
-        - SEO Readiness built in (free)
-        - Repurpose: 1 piece → 10 outputs
-        - Content Chain plans distribution
-        - Visual carousel builder
-        """)
-
-    st.markdown("---")
-
-    st.markdown("#### Full Feature Map")
-    st.markdown("""
-    | Feature | What It Does | Cost |
-    |---|---|---|
-    | **🔧 Pipeline** | Text/URL/PDF/DOCX → 4 channel content | API |
-    | **🔄 Repurpose** | 1 article → 10 pieces (3 LinkedIn, thread, blog, email, Reddit, carousel, newsletter, quotes) | API |
-    | **🔍 Trend Radar** | Scans trending topics → "write about this" with hooks | API |
-    | **📊 Data → Content** | CSV/data → insight extraction → content angles | API |
-    | **🧬 Brand Voice** | Upload samples → extract voice DNA → match in all outputs | API |
-    | **📊 SEO Analysis** | Flesch-Kincaid, keywords, headings, meta description | **$0** |
-    | **🎠 Carousel Builder** | Blog → 8 visual slides with progress bars | API |
-    | **🔗 Content Chain** | Cross-linking + distribution strategy + timing | API |
-    | **🖼️ AI Visuals** | Blog headers, LinkedIn visuals, quote cards (Pollinations.ai) | **$0** |
-    | **📈 Quality Scoring** | 5-dimension scoring per output | API |
-    | **📦 Export** | Markdown bundle, content calendar, plain text, PNG images | **$0** |
-    | **🎨 Tone/Audience** | 5 tone × 5 audience presets | — |
-    """)
-
-    st.markdown("---")
-
-    st.markdown("#### Next on the Roadmap")
-    st.markdown("""
-    **Workflow Integration** → HubSpot API (email sequences), Buffer (social scheduling),
-    Slack notifications (content ready for review)
-
-    **Performance Loop** → Track insight → content → engagement, feed data
-    back into prompt optimization
-    """)
-
-    st.markdown("---")
-    st.markdown(
-        "<div style='text-align:center; color:#94a3b8; font-size:0.85rem; padding:1rem;'>"
-        "Built by <strong>Ata Okuzcuoglu</strong> · MSc Management & Technology @ TUM · "
-        "<a href='https://linkedin.com/in/atakzcgl' style='color:#6366f1;'>LinkedIn</a>"
-        "</div>",
-        unsafe_allow_html=True
-    )
