@@ -30,11 +30,11 @@ Built by [Ata Okuzcuoglu](https://linkedin.com/in/ataokuzcuoglu)
 
 ```
 contentengine/
-├── app.py                      ← Streamlit UI (3,068 lines)
+├── app.py                      ← Streamlit UI (3,204 lines)
 ├── config/
-│   ├── prompts.py              ← 8 prompt templates (382 lines)
-│   ├── settings.py             ← Tone/audience presets, model config (131 lines)
-│   └── demos.py                ← Pre-generated showcase content (396 lines)
+│   ├── prompts.py              ← 8 prompt templates
+│   ├── settings.py             ← Tone/audience presets, model config
+│   └── demos.py                ← Pre-generated showcase content
 ├── engine/
 │   ├── pipeline.py             ← generate_content, generate_batch, analyze_insight
 │   ├── seo.py                  ← seo_analyze, target keyword tracking, render panel
@@ -59,12 +59,12 @@ contentengine/
 |---|---|
 | 🔧 **Pipeline** | Input → 4 channels via analysis-fed batch generation (2 API calls) |
 | 🔄 **Repurpose** | 1 article → 10 platform-specific pieces |
-| 🔍 **Trend Radar** | Industry → 8 trending topics with hooks |
-| 📊 **Data → Content** | CSV/data → story angles → Pipeline |
-| 📦 **Showcase** | 3 demos with carousel + distribution (no API) |
-| 🏗️ **How It Works** | Architecture + feature map |
+| 🔍 **Discover** | Trend Radar (industry → 8 topics) + Data → Content (CSV → story angles) |
+| 🎠 **Carousel** | Any text → 8 visual LinkedIn/Instagram slides (also inline in Pipeline) |
+| 🧰 **Toolkit** | SEO Analysis ($0) · Brand Voice Cloning · Insight Analysis — all standalone |
+| 📦 **Showcase** | 3 industry demos with carousel + distribution (no API needed) |
 
-**Built-in:** Brand Voice Cloning · Target Keyword SEO ($0) · Carousel Builder · Content Chain · Multi-Language (EN/DE/TR/ES/FR) · Quality Scoring · Content History · Cost estimation · Dynamic onboarding
+**Built-in:** Target Keyword SEO · Content Chain · Multi-Language (EN/DE/TR/ES/FR) · Quality Scoring · Content History · Cost estimation · AI Visuals · Dynamic onboarding
 
 ## Key Architectural Decisions
 
@@ -73,6 +73,7 @@ contentengine/
 3. **Structured Knowledge Base** — 6 fields vs. freeform text for richer context
 4. **Anti-meta-commentary** — AI never says "I notice..." — always produces content
 5. **Fallback design** — batch fails → individual generation with analysis injection
+6. **Standalone tools** — Carousel, SEO, Voice, Analysis each work independently with own input
 
 ## Tech Stack
 
