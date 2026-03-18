@@ -1,0 +1,7 @@
+"""ContentEngine AI — Configuration package."""
+from config.settings import MODEL, DAILY_LIMIT, TONE_OPTIONS, AUDIENCE_OPTIONS
+from config.prompts import (
+    SYSTEM_PROMPT, FORMAT_PROMPTS, ANALYSIS_PROMPT, BATCH_PROMPT,
+    TREND_RADAR_PROMPT, DATA_TO_CONTENT_PROMPT, CONTENT_CHAIN_PROMPT,
+    CAROUSEL_PROMPT
+)

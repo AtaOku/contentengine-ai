@@ -1,9 +1,35 @@
 """
-ContentEngine AI — Multi-Format Content Pipeline
-Built by Ata Okuzcuoglu — Full-stack AI content operations system.
+ContentEngine AI — Full-Stack AI Content Operations System
+Built by Ata Okuzcuoglu
 
-Takes a raw insight (news, trend, competitor move, customer quote) and produces
-publish-ready content across 4 channels in under 60 seconds.
+Architecture (modular packages in /config, /engine, /ui, /utils):
+
+    config/
+        prompts.py      — All prompt templates (system, format, batch, analysis)
+        settings.py     — Constants, tone/audience presets, model config
+        demos.py        — Pre-generated showcase content (3 industries)
+
+    engine/
+        pipeline.py     — generate_content, generate_batch, analyze_insight
+        repurpose.py    — repurpose_content (1→10 pieces)
+        trends.py       — scan_trends (Trend Radar)
+        data_to_content.py — analyze_data_for_content (CSV→insights)
+        chain.py        — generate_content_chain (distribution strategy)
+        carousel.py     — generate_carousel, render_carousel_slide
+        voice.py        — extract_brand_voice, score_content
+        seo.py          — seo_analyze, render_seo_panel, keyword tracking
+
+    ui/
+        mockups.py      — render_linkedin/reddit/email/blog_mockup
+        styles.py       — Custom CSS
+        components.py   — show_image_with_download, image helpers
+
+    utils/
+        extractors.py   — fetch_url_content, extract_file_content
+        export.py       — build_markdown_bundle, content_calendar, repurpose_bundle
+
+Note: This monolithic app.py is the Streamlit deployment target.
+Modules contain the same code extracted for testability and reuse.
 """
 
 import streamlit as st
