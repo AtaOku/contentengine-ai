@@ -613,7 +613,7 @@ def generate_meta_description(text, max_len=155):
     return text[:max_len].strip() + "..."
 
 
-def seo_analyze(text):
+def seo_analyze(text, target_keyword=""):
     """Complete SEO readiness analysis for blog content."""
     words = text.split()
     word_count = len(words)
@@ -673,6 +673,51 @@ def seo_analyze(text):
         score += 10
     else:
         score += max(0, 10 - len(heading_issues) * 3)
+
+    # Target keyword analysis
+    kw_data = None
+    if target_keyword and target_keyword.strip():
+        kw = target_keyword.strip().lower()
+        text_lower = text.lower()
+        kw_count = text_lower.count(kw)
+        kw_density = round((kw_count / max(1, word_count)) * 100, 2)
+
+        # Check keyword placement
+        kw_in_title = any(kw in h[1].lower() for h in headings if h[0] == "H1")
+        kw_in_headings = any(kw in h[1].lower() for h in headings)
+        kw_in_meta = kw in meta_desc.lower()
+        kw_in_first_100 = kw in " ".join(words[:100]).lower()
+
+        # Density assessment
+        if 0.5 <= kw_density <= 2.5:
+            density_status = "✅ Optimal"
+        elif kw_density < 0.5:
+            density_status = "⚠️ Low — use keyword more"
+        else:
+            density_status = "⚠️ High — risk of keyword stuffing"
+
+        # Keyword score contribution
+        kw_score = 0
+        if kw_count > 0: kw_score += 3
+        if kw_in_title: kw_score += 5
+        if kw_in_headings: kw_score += 3
+        if kw_in_meta: kw_score += 2
+        if kw_in_first_100: kw_score += 2
+        if 0.5 <= kw_density <= 2.5: kw_score += 5
+        score += kw_score
+
+        kw_data = {
+            "keyword": target_keyword.strip(),
+            "count": kw_count,
+            "density": kw_density,
+            "density_status": density_status,
+            "in_title": kw_in_title,
+            "in_headings": kw_in_headings,
+            "in_meta": kw_in_meta,
+            "in_first_100": kw_in_first_100,
+            "placement_checks": sum([kw_in_title, kw_in_headings, kw_in_meta, kw_in_first_100]),
+        }
+
     score = min(100, max(0, score))
 
     return {
@@ -690,6 +735,7 @@ def seo_analyze(text):
         "heading_issues": heading_issues,
         "meta_description": meta_desc,
         "sentence_count": len(sentences),
+        "target_keyword": kw_data,
     }
 
 
@@ -702,6 +748,23 @@ def render_seo_panel(seo_data):
     headings_html = " → ".join([f"{h[0]}" for h in seo_data["headings"]]) if seo_data["headings"] else "<em>None found</em>"
     issues_html = " · ".join(seo_data["heading_issues"]) if seo_data["heading_issues"] else "✅ Good structure"
 
+    # Target keyword section
+    kw_section = ""
+    kw = seo_data.get("target_keyword")
+    if kw:
+        checks = []
+        checks.append(f"{'✅' if kw['in_title'] else '❌'} In title")
+        checks.append(f"{'✅' if kw['in_headings'] else '❌'} In headings")
+        checks.append(f"{'✅' if kw['in_first_100'] else '❌'} In first 100 words")
+        checks.append(f"{'✅' if kw['in_meta'] else '❌'} In meta description")
+        checks_html = " · ".join(checks)
+        kw_section = f"""
+    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px; margin:8px 0;">
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:#2563eb; font-weight:700; margin-bottom:6px;">🎯 Target Keyword: "{kw['keyword']}"</div>
+        <div style="font-size:0.85rem; margin-bottom:4px;">Count: <strong>{kw['count']}</strong> · Density: <strong>{kw['density']}%</strong> {kw['density_status']} · Placement: <strong>{kw['placement_checks']}/4</strong></div>
+        <div style="font-size:0.8rem; color:#374151;">{checks_html}</div>
+    </div>"""
+
     return f"""
 <div style="background:linear-gradient(135deg,#f8fafc,#f0f4ff); border:1px solid #c3d4f7; border-left:4px solid {color}; border-radius:12px; padding:1.25rem; margin:0.75rem 0;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -712,7 +775,7 @@ def render_seo_panel(seo_data):
         <div><strong>Words:</strong> {seo_data['word_count']} {seo_data['wc_status']}</div>
         <div><strong>Readability:</strong> {seo_data['reading_ease']} {seo_data['read_status']}</div>
         <div><strong>Avg sentence:</strong> {seo_data['avg_sentence_len']} words {seo_data['sent_status']}</div>
-    </div>
+    </div>{kw_section}
     <div style="font-size:0.85rem; margin-bottom:8px;">
         <strong>Top keywords:</strong> {keywords_html}
     </div>
@@ -2089,6 +2152,12 @@ with tab_pipeline:
 
     st.caption(f"**Tone:** {tone_desc}  \n**Audience:** {audience_desc}")
 
+    # SEO Target Keyword (optional)
+    target_keyword = st.text_input("🎯 Target keyword (optional — for SEO scoring):",
+        placeholder="e.g., connected worker platform, content marketing strategy",
+        key="target_kw",
+        help="If provided, the SEO panel will check keyword density, placement in title/headings/meta, and adjust the SEO score.")
+
     st.markdown("---")
 
     channels = []
@@ -2102,7 +2171,10 @@ with tab_pipeline:
         run = st.button("⚡ Run Pipeline", type="primary", use_container_width=True)
     with col_info:
         runs_left = 10 - len(st.session_state.get("run_timestamps", []))
-        st.caption(f"{len(channels)} channels · ~{len(channels) * 8 + 5}s · {max(0, runs_left)} runs left today")
+        batch_mode = len(channels) >= 3
+        est_calls = 2 if batch_mode else len(channels) + 1
+        est_cost = 0.02 if batch_mode else len(channels) * 0.006 + 0.003
+        st.caption(f"{len(channels)} channels · {'⚡ batch' if batch_mode else 'individual'} · ~{est_calls} API calls · ~${est_cost:.3f} · {max(0, runs_left)} runs left")
 
     # Rate limiting: 10 runs per session per day
     DAILY_LIMIT = 10
@@ -2290,7 +2362,7 @@ with tab_pipeline:
 
                     # SEO Readiness Panel for blog content
                     if ch == "blog":
-                        seo = seo_analyze(results[ch])
+                        seo = seo_analyze(results[ch], target_keyword=target_keyword)
                         st.markdown(render_seo_panel(seo), unsafe_allow_html=True)
                         # Copyable meta description
                         with st.expander("📋 Copy meta description"):
