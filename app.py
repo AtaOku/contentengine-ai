@@ -1893,7 +1893,7 @@ with st.sidebar:
 
     st.markdown("### 🧠 Knowledge Base")
     with st.expander("Company context (woven into every output)", expanded=False):
-        kb_company = st.text_input("Company name:", placeholder="e.g., Workerbase, Zalando, your startup...", key="kb_company")
+        kb_company = st.text_input("Company name:", placeholder="e.g., Acme Corp, Zalando, your startup...", key="kb_company")
         kb_industry = st.text_input("Industry:", placeholder="e.g., Manufacturing SaaS, Fashion e-commerce, Fintech...", key="kb_industry")
         kb_product = st.text_area("What you do (1-2 sentences):", placeholder="e.g., Connected worker platform used in 60+ factories", height=68, key="kb_product")
         kb_audience = st.text_input("Target audience:", placeholder="e.g., Plant managers, VP Operations, CMOs...", key="kb_audience")
