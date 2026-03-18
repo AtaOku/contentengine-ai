@@ -1,6 +1,6 @@
 """
 ContentEngine AI — Multi-Format Content Pipeline
-Built by Ata Okuzcuoglu as a working proof-of-concept for Workerbase.
+Built by Ata Okuzcuoglu — Full-stack AI content operations system.
 
 Takes a raw insight (news, trend, competitor move, customer quote) and produces
 publish-ready content across 4 channels in under 60 seconds.
@@ -876,7 +876,7 @@ def generate_content_chain(client, results, channel_labels):
         if text.endswith("```"):
             text = text.rsplit("```", 1)[0]
         return json.loads(text.strip()), None
-    except:
+    except Exception:
         return None, "Failed to generate content chain."
 
 
@@ -1096,7 +1096,7 @@ def has_api_key():
         pass
     return bool(st.session_state.get("api_key", ""))
 
-def generate_content(client, format_type, insight, context, tone_desc="", audience_desc="", voice_profile=None):
+def generate_content(client, format_type, insight, context, tone_desc="", audience_desc="", voice_profile=None, language="English"):
     prompt = FORMAT_PROMPTS[format_type].format(
         insight=insight, 
         context=context,
@@ -1104,8 +1104,10 @@ def generate_content(client, format_type, insight, context, tone_desc="", audien
         audience=audience_desc or "Business decision-makers"
     )
 
-    # Inject brand voice profile
+    # Language instruction
     modifiers = ""
+    if language and language != "English":
+        modifiers += f"\n\nCRITICAL: Write the ENTIRE output in {language}. All text, headlines, hashtags, CTAs — everything in {language}."
 
     # Inject brand voice profile
     if voice_profile:
@@ -1178,7 +1180,7 @@ def score_content(client, content, channel):
         if text.endswith("```"):
             text = text.rsplit("```", 1)[0]
         return json.loads(text.strip())
-    except:
+    except Exception:
         return None
 
 
@@ -1308,7 +1310,7 @@ def analyze_insight(client, insight, context):
         if text.endswith("```"):
             text = text.rsplit("```", 1)[0]
         return json.loads(text.strip())
-    except:
+    except Exception:
         return None
 
 
@@ -1333,7 +1335,7 @@ DEMO_INSIGHTS = {
     }
 }
 
-# ── Pre-generated Workerbase content ─────────────────────────
+# ── Pre-generated showcase content ─────────────────────────
 
 PREGENERATED = {
     "linkedin": """Your factory has 200 years of accumulated knowledge.
@@ -1809,6 +1811,14 @@ with st.sidebar:
 
     st.divider()
 
+    st.markdown("### 🌍 Output Language")
+    output_lang = st.selectbox("Generate content in:", 
+        ["English", "German (Deutsch)", "Turkish (Türkçe)", "Spanish (Español)", "French (Français)", "Same as input"],
+        index=0, key="output_lang",
+        help="All generated content will be in this language, regardless of input language.")
+
+    st.divider()
+
     st.markdown("### 🖼️ AI Visuals")
     enable_images = st.checkbox("Generate images (experimental)", value=False,
         help="Auto-generate blog headers and visual assets via Pollinations.ai. Free but may be slow or unavailable.")
@@ -1836,16 +1846,29 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Welcome intro
-st.markdown("""
+# Dynamic onboarding — detailed for first-time users, minimal for returning
+is_first_run = "content_history" not in st.session_state or len(st.session_state.get("content_history", [])) == 0
+
+if is_first_run:
+    st.markdown("""
 <div style="background: linear-gradient(135deg, #f0f4ff, #e8f0fe); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border: 1px solid #c3d4f7;">
-    <div style="font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: #1e3a5f; line-height: 1.6;">
-        <strong>How to use:</strong><br>
-        <strong>1.</strong> <strong>Pipeline</strong> → paste text, a URL, or upload a file → get 4 channel-ready outputs + carousel<br>
-        <strong>2.</strong> <strong>Repurpose</strong> → drop a long blog post → get 10 different content pieces<br>
+    <div style="font-size: 0.95rem; color: #1e3a5f; line-height: 1.7;">
+        <strong>👋 Welcome! Here's how to get started:</strong><br><br>
+        <strong>🚀 Quickest start:</strong> Go to the <strong>Showcase</strong> tab → pick an industry → see full demo output (no API needed)<br><br>
+        <strong>Build your own:</strong><br>
+        <strong>1.</strong> <strong>Pipeline</strong> → paste text, a URL, or upload a file → get LinkedIn, blog, Reddit, and email in 60 seconds<br>
+        <strong>2.</strong> <strong>Repurpose</strong> → drop a long article → get 10 platform-specific pieces<br>
         <strong>3.</strong> <strong>Trend Radar</strong> → enter your industry → discover what to write about this week<br>
-        <strong>4.</strong> <strong>Data → Content</strong> → upload CSV/data → AI extracts insights → turn them into content
+        <strong>4.</strong> <strong>Data → Content</strong> → upload CSV/data → AI extracts story angles<br><br>
+        <strong>💡 Pro tip:</strong> Set your company context in the sidebar (left) — it gets woven into every output.
     </div>
+</div>
+""", unsafe_allow_html=True)
+else:
+    run_count = len(st.session_state.get("content_history", []))
+    st.markdown(f"""
+<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 16px; margin-bottom:1rem; font-size:0.85rem; color:#64748b;">
+    Session: {run_count} run{'s' if run_count != 1 else ''} completed · Use sidebar to configure channels, voice, and language
 </div>
 """, unsafe_allow_html=True)
 
@@ -2022,12 +2045,20 @@ with tab_pipeline:
                     "email": "📧 Email Sequence"
                 }
 
+                # Clean language value
+                lang_map = {
+                    "English": "English", "German (Deutsch)": "German",
+                    "Turkish (Türkçe)": "Turkish", "Spanish (Español)": "Spanish",
+                    "French (Français)": "French", "Same as input": ""
+                }
+                clean_lang = lang_map.get(output_lang, output_lang)
+
                 results = {}
                 progress = st.progress(0)
                 for i, ch in enumerate(channels):
                     with st.spinner(f"Generating {channel_labels[ch]}..."):
                         voice_profile = st.session_state.get("voice_profile", None) if voice_enabled else None
-                        results[ch] = generate_content(client, ch, insight_text, context, tone_desc, audience_desc, voice_profile)
+                        results[ch] = generate_content(client, ch, insight_text, context, tone_desc, audience_desc, voice_profile, language=clean_lang)
                     progress.progress((i + 1) / len(channels))
 
                 # Save results for Content Chain and Carousel (survive reruns)
@@ -2035,12 +2066,24 @@ with tab_pipeline:
                 st.session_state["pipeline_channel_labels"] = channel_labels
 
                 elapsed = time.time() - start_time
+                total_words = sum(len(v.split()) for v in results.values())
+                wps = total_words / elapsed if elapsed > 0 else 0
+
+                # Save to content history
+                history_entry = {
+                    "timestamp": datetime.now().strftime("%H:%M"),
+                    "insight": insight_text[:80] + "..." if len(insight_text) > 80 else insight_text,
+                    "channels": len(channels),
+                    "words": total_words,
+                    "time": f"{elapsed:.1f}s",
+                }
+                if "content_history" not in st.session_state:
+                    st.session_state["content_history"] = []
+                st.session_state["content_history"].append(history_entry)
 
                 # Stats
                 st.markdown("---")
                 cols = st.columns(4)
-                total_words = sum(len(v.split()) for v in results.values())
-                wps = total_words / elapsed if elapsed > 0 else 0
                 stats = [
                     (str(len(channels)), "Channels"),
                     (str(total_words), "Words Generated"),
@@ -2069,15 +2112,30 @@ with tab_pipeline:
                         li_url = generate_image_url(li_prompt, width=1200, height=627, seed=77)
                         show_image_with_download(li_url, "🖼️ AI-generated post visual (free via Pollinations.ai)", "pipe_li", "linkedin_visual.png")
 
-                    st.text_area(
-                        f"{ch} output",
-                        value=results[ch],
-                        height=300,
-                        key=f"out_{ch}",
-                        label_visibility="collapsed"
-                    )
-                    col_dl, col_score = st.columns([1, 3])
-                    with col_dl:
+                    # Render platform mockup
+                    PIPELINE_RENDERERS = {
+                        "linkedin": render_linkedin_mockup,
+                        "blog": render_blog_mockup,
+                        "reddit": render_reddit_mockup,
+                        "email": render_email_mockup,
+                    }
+                    renderer = PIPELINE_RENDERERS.get(ch)
+                    if renderer:
+                        try:
+                            mockup_html = renderer(results[ch])
+                            if mockup_html:
+                                st.markdown(mockup_html, unsafe_allow_html=True)
+                        except Exception:
+                            pass
+
+                    with st.expander(f"📋 View raw text / copy {ch}"):
+                        st.text_area(
+                            f"{ch} output",
+                            value=results[ch],
+                            height=250,
+                            key=f"out_{ch}",
+                            label_visibility="collapsed"
+                        )
                         st.download_button(
                             f"📋 Download {ch}",
                             results[ch],
@@ -2212,6 +2270,21 @@ with tab_pipeline:
                         st.markdown(render_carousel_slide(slides[si], seed=si), unsafe_allow_html=True)
             slides_text = "\n\n".join([f"SLIDE {s.get('slide_number', i)}: {s.get('headline', '')}\n{s.get('body', '')}" for i, s in enumerate(slides, 1)])
             st.download_button("📦 Download Carousel", slides_text, file_name="carousel.txt", mime="text/plain", key="dl_carousel")
+
+    # ── Content History (session-based) ──
+    history = st.session_state.get("content_history", [])
+    if history:
+        st.markdown("---")
+        with st.expander(f"📜 Session History ({len(history)} runs)", expanded=False):
+            for idx, entry in enumerate(reversed(history)):
+                st.markdown(f"""
+<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; margin:4px 0; font-size:0.85rem;">
+    <strong>{entry['timestamp']}</strong> · {entry['channels']} channels · {entry['words']} words · {entry['time']}
+    <div style="color:#64748b; margin-top:4px;">{entry['insight']}</div>
+</div>""", unsafe_allow_html=True)
+            if st.button("🗑️ Clear history", key="clear_history"):
+                st.session_state["content_history"] = []
+                st.rerun()
 
 
 # ─── TAB 2: Repurpose ────────────────────────────────────────
