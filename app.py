@@ -1096,37 +1096,45 @@ def has_api_key():
         pass
     return bool(st.session_state.get("api_key", ""))
 
-def generate_content(client, format_type, insight, context, tone_desc="", audience_desc="", voice_profile=None, language="English"):
+def generate_content(client, format_type, insight, context, tone_desc="", audience_desc="", voice_profile=None, language="English", analysis=None):
+    """Generate content for a single channel. Fallback if batch fails."""
+    # Inject analysis into insight if available
+    enriched_insight = insight
+    if analysis:
+        enriched_insight = f"""CONTENT ANALYSIS (use this to guide your writing):
+Core angle: {analysis.get('core_angle', '')}
+Audience pain: {analysis.get('audience_pain', '')}
+Contrarian take: {analysis.get('contrarian_take', '')}
+Hooks: {', '.join(analysis.get('content_hooks', []))}
+Why now: {analysis.get('trending_relevance', '')}
+
+RAW INSIGHT:
+{insight}"""
+
     prompt = FORMAT_PROMPTS[format_type].format(
-        insight=insight, 
+        insight=enriched_insight, 
         context=context,
         tone=tone_desc or "Professional thought leadership",
         audience=audience_desc or "Business decision-makers"
     )
 
-    # Language instruction
     modifiers = ""
     if language and language != "English":
         modifiers += f"\n\nCRITICAL: Write the ENTIRE output in {language}. All text, headlines, hashtags, CTAs — everything in {language}."
 
-    # Inject brand voice profile
     if voice_profile:
         voice_instructions = voice_profile.get("mimicry_instructions", "")
         voice_summary = voice_profile.get("voice_summary", "")
         sig_phrases = ", ".join(voice_profile.get("signature_phrases", []))
         avoid = voice_profile.get("what_they_avoid", "")
-
         modifiers += f"""
 
 BRAND VOICE (CRITICAL — match this voice exactly):
 {voice_summary}
-
 Mimicry instructions: {voice_instructions}
 Hook pattern: {voice_profile.get('hook_pattern', '')}
 Sentence style: {voice_profile.get('sentence_style', '')}
-Structural pattern: {voice_profile.get('structural_pattern', '')}
 Signature phrases to use naturally: {sig_phrases}
-CTA style: {voice_profile.get('cta_style', '')}
 Things to AVOID: {avoid}"""
 
     if modifiers:
@@ -1141,7 +1149,91 @@ Things to AVOID: {avoid}"""
         )
         return response.content[0].text
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Error: {str(e)[:200]}"
+
+
+BATCH_PROMPT = """Generate content for ALL 4 channels from this single insight.
+Use the analysis below to ensure consistent messaging across all outputs.
+
+CONTENT ANALYSIS:
+Core angle: {core_angle}
+Audience pain: {audience_pain}
+Contrarian take: {contrarian_take}
+Hooks: {hooks}
+Why now: {trending}
+
+RAW INSIGHT:
+{insight}
+
+COMPANY/INDUSTRY CONTEXT:
+{context}
+
+TONE: {tone}
+AUDIENCE: {audience}
+{language_instruction}
+{voice_instruction}
+
+Generate ALL 4 pieces. Return a JSON object with exactly these keys:
+{{
+    "linkedin": "Full LinkedIn post (150-250 words, hook first, line breaks, 3-5 hashtags, no emojis)",
+    "blog": "Full blog post (400-600 words, headline with ##, subheadings, specific examples, SEO-friendly)",
+    "reddit": "Title on first line, blank line, then body (100-200 words, peer tone, no promotion, TL;DR)",
+    "email": "Subject A: ...\\nSubject B: ...\\nPreview: ...\\n---\\n[body 100-150 words]\\nCTA: ..."
+}}
+
+CRITICAL RULES:
+- Use the analysis to maintain consistent narrative across all 4 pieces
+- Each piece MUST be channel-native (LinkedIn ≠ Reddit ≠ Blog ≠ Email)
+- NEVER comment on the input. Just produce the content.
+- Return ONLY valid JSON. No markdown backticks. No preamble."""
+
+
+def generate_batch(client, insight, context, analysis, tone_desc="", audience_desc="", voice_profile=None, language="English"):
+    """Generate all 4 channels in a single API call. ~60% cheaper than 4 separate calls."""
+    lang_instruction = ""
+    if language and language != "English":
+        lang_instruction = f"CRITICAL: Write ALL content in {language}."
+
+    voice_instruction = ""
+    if voice_profile:
+        voice_instruction = f"""BRAND VOICE (match exactly):
+{voice_profile.get('voice_summary', '')}
+Hook pattern: {voice_profile.get('hook_pattern', '')}
+Sentence style: {voice_profile.get('sentence_style', '')}
+Signature phrases: {', '.join(voice_profile.get('signature_phrases', []))}
+Avoid: {voice_profile.get('what_they_avoid', '')}"""
+
+    prompt = BATCH_PROMPT.format(
+        core_angle=analysis.get('core_angle', 'N/A') if analysis else 'N/A',
+        audience_pain=analysis.get('audience_pain', 'N/A') if analysis else 'N/A',
+        contrarian_take=analysis.get('contrarian_take', 'N/A') if analysis else 'N/A',
+        hooks=', '.join(analysis.get('content_hooks', [])) if analysis else 'N/A',
+        trending=analysis.get('trending_relevance', 'N/A') if analysis else 'N/A',
+        insight=insight[:3000],
+        context=context[:500],
+        tone=tone_desc or "Professional thought leadership",
+        audience=audience_desc or "Business decision-makers",
+        language_instruction=lang_instruction,
+        voice_instruction=voice_instruction,
+    )
+
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4000,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        return json.loads(text.strip()), None
+    except json.JSONDecodeError:
+        return None, "batch_parse_error"
+    except Exception as e:
+        return None, f"Error: {str(e)[:200]}"
 
 
 def extract_brand_voice(client, samples_text):
@@ -1736,9 +1828,34 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("### 🏭 Context Injection")
-    default_ctx = "Tell the AI about your company, product, or industry. This background gets woven into every piece of content it generates."
-    context = st.text_area("What does your company do?", value=default_ctx, height=120)
+    st.markdown("### 🧠 Knowledge Base")
+    with st.expander("Company context (woven into every output)", expanded=False):
+        kb_company = st.text_input("Company name:", placeholder="e.g., Workerbase, Zalando, your startup...", key="kb_company")
+        kb_industry = st.text_input("Industry:", placeholder="e.g., Manufacturing SaaS, Fashion e-commerce, Fintech...", key="kb_industry")
+        kb_product = st.text_area("What you do (1-2 sentences):", placeholder="e.g., Connected worker platform used in 60+ factories", height=68, key="kb_product")
+        kb_audience = st.text_input("Target audience:", placeholder="e.g., Plant managers, VP Operations, CMOs...", key="kb_audience")
+        kb_competitors = st.text_input("Competitors:", placeholder="e.g., Poka, Tulip, Augmentir", key="kb_competitors")
+        kb_differentiator = st.text_input("Key differentiator:", placeholder="e.g., Real-time worker guidance, not just dashboards", key="kb_diff")
+
+    # Assemble structured context
+    context_parts = []
+    if kb_company:
+        context_parts.append(f"Company: {kb_company}")
+    if kb_industry:
+        context_parts.append(f"Industry: {kb_industry}")
+    if kb_product:
+        context_parts.append(f"Product: {kb_product}")
+    if kb_audience:
+        context_parts.append(f"Target audience: {kb_audience}")
+    if kb_competitors:
+        context_parts.append(f"Competitors: {kb_competitors}")
+    if kb_differentiator:
+        context_parts.append(f"Differentiator: {kb_differentiator}")
+
+    if context_parts:
+        context = "\n".join(context_parts)
+    else:
+        context = "General content — no specific company context provided."
 
     st.divider()
 
@@ -2052,13 +2169,36 @@ with tab_pipeline:
                     "French (Français)": "French", "Same as input": ""
                 }
                 clean_lang = lang_map.get(output_lang, output_lang)
+                voice_profile = st.session_state.get("voice_profile", None) if voice_enabled else None
 
+                # Try batch generation first (1 API call instead of 4)
                 results = {}
-                progress = st.progress(0)
-                for i, ch in enumerate(channels):
-                    with st.spinner(f"Generating {channel_labels[ch]}..."):
-                        voice_profile = st.session_state.get("voice_profile", None) if voice_enabled else None
-                        results[ch] = generate_content(client, ch, insight_text, context, tone_desc, audience_desc, voice_profile, language=clean_lang)
+                batch_used = False
+                if len(channels) >= 3:
+                    with st.spinner("⚡ Batch generating all channels (1 API call)..."):
+                        batch_results, batch_err = generate_batch(
+                            client, insight_text, context, analysis,
+                            tone_desc, audience_desc, voice_profile, clean_lang
+                        )
+                    if batch_results:
+                        # Filter to only requested channels
+                        for ch in channels:
+                            if ch in batch_results:
+                                results[ch] = batch_results[ch]
+                        batch_used = True
+
+                # Fallback: generate missing channels individually
+                missing = [ch for ch in channels if ch not in results]
+                if missing:
+                    progress = st.progress(0)
+                    for i, ch in enumerate(missing):
+                        with st.spinner(f"Generating {channel_labels[ch]}..."):
+                            results[ch] = generate_content(
+                                client, ch, insight_text, context,
+                                tone_desc, audience_desc, voice_profile,
+                                language=clean_lang, analysis=analysis
+                            )
+                        progress.progress((i + 1) / len(missing))
                     progress.progress((i + 1) / len(channels))
 
                 # Save results for Content Chain and Carousel (survive reruns)
@@ -2083,16 +2223,20 @@ with tab_pipeline:
 
                 # Stats
                 st.markdown("---")
-                cols = st.columns(4)
+                api_calls = 1 if batch_used else len(channels)  # batch = 1 + analysis, individual = N + analysis
+                cols = st.columns(5)
                 stats = [
                     (str(len(channels)), "Channels"),
-                    (str(total_words), "Words Generated"),
-                    (f"{elapsed:.1f}s", "Pipeline Time"),
-                    (f"{wps:.0f}", "Words/sec")
+                    (str(total_words), "Words"),
+                    (f"{elapsed:.1f}s", "Time"),
+                    (f"{wps:.0f}", "Words/sec"),
+                    (f"{api_calls}+1", "API Calls"),
                 ]
                 for col, (num, label) in zip(cols, stats):
                     with col:
                         st.markdown(f'<div class="stat-box"><div class="stat-number">{num}</div><div class="stat-label">{label}</div></div>', unsafe_allow_html=True)
+                if batch_used:
+                    st.caption("⚡ Batch mode: 4 channels generated in 1 API call (analysis + generation = 2 total)")
 
                 st.markdown("---")
 
@@ -2737,24 +2881,24 @@ with tab_architecture:
 
     st.markdown("#### Pipeline Flow")
     st.code("""
-    ┌─────────────────┐
-    │     INPUTS       │
-    │                  │
-    │  ✍️ Text/Paste    │     ┌──────────────┐     ┌─────────────────────┐
-    │  🔗 URL Import   │────→│   ANALYSIS   │────→│  PARALLEL GENERATE  │
-    │  📄 PDF Upload   │     │  (AI layer)  │     │  + Tone & Audience  │
-    │  📎 DOCX/CSV     │     └──────────────┘     │                     │
-    │  📦 Demo         │           │               │  ├─ LinkedIn Post    │
-    └─────────────────┘      Extracts:            │  ├─ Blog Draft       │
-                              · Core angle         │  ├─ Reddit Thread    │
-              ┌───────┐       · Pain point         │  └─ Email Sequence   │
-              │ TONE  │       · Contrarian take     └─────────────────────┘
-              │ CTRL  │       · Content hooks                │
-              └───┬───┘       · Channel ranking        ┌─────┴─────┐
-              ┌───┴────┐                               │  4 OUTPUTS │
-              │AUDIENCE │                              │  < 60 sec  │
-              │  CTRL   │                              └───────────┘
-              └────────┘
+    ┌─────────────────┐     ┌──────────────┐     ┌─────────────────────┐
+    │     INPUTS       │     │   ANALYSIS   │     │   BATCH GENERATE    │
+    │                  │     │  (1 API call) │     │   (1 API call)      │
+    │  ✍️ Text/Paste    │────→│              │────→│                     │
+    │  🔗 URL Import   │     │  Extracts:   │     │  Analysis feeds     │
+    │  📄 PDF Upload   │     │  · Core angle │     │  all 4 channels:    │
+    │  📎 DOCX/CSV     │     │  · Pain point │     │                     │
+    └─────────────────┘     │  · Hooks      │     │  ├─ LinkedIn Post   │
+                             │  · Why now    │     │  ├─ Blog Draft      │
+    ┌──────────────┐         └──────────────┘     │  ├─ Reddit Thread   │
+    │ KNOWLEDGE    │               │               │  └─ Email Sequence  │
+    │ BASE         │               │               └─────────────────────┘
+    │ · Company    │               │                        │
+    │ · Industry   │               ▼                   ┌────┴────┐
+    │ · Audience   │────→  Consistent narrative  ←────│ OPTIMIZE │
+    │ · Competitors│         across all channels       │ SEO+Score│
+    │ · Voice DNA  │                                   └─────────┘
+    └──────────────┘       Total: 2 API calls (was 5)
     """, language=None)
 
     st.markdown("---")
