@@ -2,7 +2,7 @@
 
 **Full-stack AI content operations system. From "what should I write?" to "published across 4 channels" — in one tool.**
 
-**[Live Demo](https://contentengine-ai.streamlit.app)** · **[Case Study](https://www.notion.so/326feccf871081f7a3cde0e1033be38b)** · **[Full Portfolio](https://www.notion.so/30ffeccf87108174a30cd60449aebaf3)**
+· **[Case Study](https://www.notion.so/326feccf871081f7a3cde0e1033be38b)** · **[Full Portfolio](https://www.notion.so/30ffeccf87108174a30cd60449aebaf3)**
 
 Built by [Ata Okuzcuoglu](https://linkedin.com/in/ataokuzcuoglu)
 
